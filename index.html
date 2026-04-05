@@ -8,19 +8,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amarante&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script id='sonic_js' data-port='8012' src='https://sonic2-rbx.cloud-center.ro/cp/widgets.js?r=300'></script>
+  <script id='sonic_js' data-port='8012' src='https://sonic2-rbx.cloud-center.ro/cp/widgets.js?r=706'></script>
 
   <style>
     :root {
       --bg: #050505;
       --white: #F9F2DF;
-      --white-soft: rgba(249,242,223,0.82);
+      --white-soft: rgba(249,242,223,0.86);
       --white-mid: rgba(249,242,223,0.62);
       --glass: rgba(249,242,223,0.08);
       --glass-border: rgba(249,242,223,0.12);
       --accent: #462121;
       --accent-soft: rgba(70,33,33,0.18);
-      --shadow: 0 20px 80px rgba(0,0,0,0.45);
 
       --logo-scale: 1;
       --logo-blur: 0px;
@@ -29,6 +28,8 @@
       --ring-scale: 1;
       --ring-opacity: 0.22;
       --subtitle-opacity: 0.96;
+      --burn-x: 0px;
+      --burn-y: 0px;
     }
 
     * {
@@ -42,12 +43,15 @@
       height: 100%;
       overflow: hidden;
       background: var(--bg);
+      cursor: none;
     }
 
     body {
       position: relative;
       font-family: 'Inter', sans-serif;
       color: var(--white);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     .bg-video-wrap {
@@ -100,9 +104,24 @@
       100% { transform: translate(-20px, 10px) scale(1.06); }
     }
 
-    .main-stage {
+    .home-layer {
       position: relative;
       z-index: 10;
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      transition: opacity .9s ease, transform .9s ease, filter .9s ease;
+    }
+
+    .home-layer.dimmed {
+      opacity: 0;
+      transform: scale(1.02);
+      filter: blur(4px);
+      pointer-events: none;
+    }
+
+    .main-stage {
+      position: relative;
       width: 100%;
       height: 100%;
       display: flex;
@@ -118,8 +137,10 @@
       justify-content: center;
       text-align: center;
       width: 100%;
-      max-width: 1300px;
+      max-width: 1400px;
       animation: brandFadeIn 1.2s ease;
+      transform: translate(var(--burn-x), var(--burn-y));
+      transition: transform 8s linear;
     }
 
     .brand-core {
@@ -197,6 +218,20 @@
       100% { transform: translate(-50%, -50%) scale(1.05); }
     }
 
+    .now-playing {
+      position: absolute;
+      top: 17%;
+      left: 67%;
+      transform: translate(-50%, -50%);
+      font-family: 'Amarante', serif;
+      line-height: 1;
+      color: var(--white);
+      opacity: 0.9;
+      white-space: nowrap;
+      z-index: 5;
+      pointer-events: none;
+    }
+
     .brand-logo {
       position: relative;
       font-family: 'Amarante', serif;
@@ -216,6 +251,47 @@
         text-shadow 120ms linear;
       animation: logoIdle 5.5s ease-in-out infinite;
       z-index: 2;
+      overflow: hidden;
+    }
+
+    .brand-logo::after {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: -35%;
+      width: 24%;
+      height: 140%;
+      transform: skewX(-20deg);
+      background: linear-gradient(
+        90deg,
+        rgba(249,242,223,0) 0%,
+        rgba(249,242,223,0.06) 35%,
+        rgba(249,242,223,0.35) 50%,
+        rgba(249,242,223,0.06) 65%,
+        rgba(249,242,223,0) 100%
+      );
+      filter: blur(2px);
+      animation: shimmerSweep 7s ease-in-out infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes shimmerSweep {
+      0%, 72%, 100% {
+        left: -35%;
+        opacity: 0;
+      }
+      76% {
+        opacity: 1;
+      }
+      90% {
+        left: 120%;
+        opacity: 1;
+      }
+      100% {
+        left: 120%;
+        opacity: 0;
+      }
     }
 
     @keyframes logoIdle {
@@ -240,7 +316,6 @@
       opacity: var(--subtitle-opacity);
     }
 
-
     @keyframes subtitleFloat {
       0%, 100% { transform: translateY(0px) scale(1); opacity: 0.92; }
       50% { transform: translateY(3px) scale(1.01); opacity: 1; }
@@ -255,6 +330,45 @@
         opacity: 1;
         transform: translateY(0) scale(1);
       }
+    }
+
+    .wifi-qr {
+      position: fixed;
+      right: 28px;
+      bottom: 26px;
+      z-index: 30;
+      width: 148px;
+      padding: 12px;
+      border-radius: 20px;
+      background: rgba(8,8,8,0.28);
+      border: 1px solid rgba(249,242,223,0.12);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+      text-align: center;
+      transition: opacity .8s ease, transform .8s ease, filter .8s ease;
+      transform: translate(var(--burn-x), var(--burn-y));
+    }
+
+    .wifi-qr.dimmed {
+      opacity: 0;
+      transform: scale(0.98);
+      filter: blur(4px);
+    }
+
+    .wifi-qr img {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .wifi-qr .qr-label {
+      margin-top: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.2;
     }
 
     .hidden-audio {
@@ -274,10 +388,13 @@
       justify-content: center;
       padding: 20px;
       overflow: hidden;
+      opacity: 0;
+      transition: opacity .7s ease;
     }
 
     .ad-overlay.show {
       display: flex;
+      opacity: 1;
     }
 
     .ad-backdrop {
@@ -302,7 +419,7 @@
       border: 1px solid rgba(249,242,223,0.10);
       box-shadow: 0 30px 120px rgba(0,0,0,0.5);
       backdrop-filter: blur(18px);
-      animation: adShellIn .65s cubic-bezier(.2,.8,.2,1);
+      animation: adShellIn .7s cubic-bezier(.2,.8,.2,1);
     }
 
     .ad-slides {
@@ -316,12 +433,12 @@
       position: absolute;
       inset: 0;
       opacity: 0;
-      transform: scale(1.08);
-      filter: blur(2px);
+      transform: scale(1.1);
+      filter: blur(6px);
       transition:
-        opacity 1s ease,
-        transform 7s ease,
-        filter 1s ease;
+        opacity 1.1s ease,
+        transform 8.5s ease,
+        filter 1.1s ease;
       pointer-events: none;
     }
 
@@ -338,6 +455,44 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .ad-slide .light-sweep {
+      position: absolute;
+      top: -10%;
+      left: -30%;
+      width: 22%;
+      height: 130%;
+      transform: skewX(-20deg);
+      background: linear-gradient(
+        90deg,
+        rgba(249,242,223,0) 0%,
+        rgba(249,242,223,0.03) 35%,
+        rgba(249,242,223,0.18) 50%,
+        rgba(249,242,223,0.03) 65%,
+        rgba(249,242,223,0) 100%
+      );
+      filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .ad-slide.active .light-sweep {
+      animation: slideSweep 2.8s ease .35s 1 forwards;
+    }
+
+    @keyframes slideSweep {
+      0% {
+        left: -30%;
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      100% {
+        left: 120%;
+        opacity: 0;
+      }
     }
 
     .ad-slide::after {
@@ -374,7 +529,6 @@
 
     .ad-style.active {
       display: flex;
-      animation: fadeStyleIn .8s ease;
     }
 
     .ad-style-cinematic {
@@ -434,6 +588,43 @@
       margin-bottom: 16px;
       background: linear-gradient(90deg, #F9F2DF, #462121);
       opacity: 0.9;
+      transform: scaleX(0);
+      transform-origin: left center;
+    }
+
+    .ad-style.active .ad-card-line {
+      animation: lineGrow .8s ease .25s forwards;
+    }
+
+    @keyframes lineGrow {
+      to { transform: scaleX(1); }
+    }
+
+    .ad-title,
+    .ad-desc {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .ad-style.active .ad-title {
+      animation: textReveal .7s cubic-bezier(.2,.8,.2,1) .35s forwards;
+    }
+
+    .ad-style.active .ad-desc {
+      animation: textReveal .7s cubic-bezier(.2,.8,.2,1) .65s forwards;
+    }
+
+    @keyframes textReveal {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
     }
 
     .ad-title {
@@ -494,11 +685,6 @@
       box-shadow: 0 0 12px rgba(70,33,33,0.35);
     }
 
-    @keyframes fadeStyleIn {
-      0% { opacity: 0; transform: translateY(18px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
     @keyframes adBackdropFade {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -533,6 +719,10 @@
       .ad-style-card .ad-card {
         margin: 0 auto;
         width: min(680px, 100%);
+      }
+
+      .wifi-qr {
+        width: 132px;
       }
     }
 
@@ -584,6 +774,23 @@
         bottom: 0;
         height: 3px;
       }
+
+      .wifi-qr {
+        right: 14px;
+        bottom: 14px;
+        width: 116px;
+        padding: 10px;
+        border-radius: 16px;
+      }
+
+      .wifi-qr .qr-label {
+        font-size: 13px;
+      }
+
+      .now-playing {
+        font-size: clamp(16px, 4.4vw, 26px);
+        max-width: 90vw;
+      }
     }
 
     @media (max-width: 700px) {
@@ -608,30 +815,31 @@
 <body>
 
   <div class="bg-video-wrap">
-    <video
-      class="bg-video"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="auto"
-    >
+    <video class="bg-video" autoplay muted loop playsinline preload="auto">
       <source src="bg.mp4" type="video/mp4" />
     </video>
     <div class="bg-overlay"></div>
     <div class="floating-fog"></div>
   </div>
 
-  <main class="main-stage">
-    <div class="brand-wrap">
-      <div class="brand-core">
-        <div class="sound-ring"></div>
-        <div class="logo-glow"></div>
-        <div id="brandLogo" class="brand-logo">Velmora</div>
-        <div id="brandSub" class="brand-sub">coffee and stories</div>
+  <div id="homeLayer" class="home-layer">
+    <main class="main-stage">
+      <div class="brand-wrap">
+        <div class="brand-core">
+          <div class="sound-ring"></div>
+          <div class="logo-glow"></div>
+          <div class="now-playing"><div id='sonic_title'></div></div>
+          <div id="brandLogo" class="brand-logo">Velmora</div>
+          <div id="brandSub" class="brand-sub">coffee and stories</div>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
+
+  <div id="wifiQr" class="wifi-qr">
+    <img src="wifi-qr.png" alt="WiFi QR" />
+    <div class="qr-label">Scan for Wi-Fi</div>
+  </div>
 
   <audio id="radioPlayer" class="hidden-audio" autoplay crossorigin="anonymous">
     <source src="https://sonic2-rbx.cloud-center.ro:8012/stream" type="audio/mpeg" />
@@ -647,23 +855,23 @@
         <div class="ad-body">
           <div id="adStyle1" class="ad-style ad-style-cinematic active">
             <div class="ad-text-wrap">
-              <div id="adTitle1" class="ad-title">Titlu reclamă</div>
-              <div id="adDesc1" class="ad-desc">Descriere reclamă</div>
+              <div id="adTitle1" class="ad-title">Ttitlu reclama</div>
+              <div id="adDesc1" class="ad-desc">Descriere reclama</div>
             </div>
           </div>
 
           <div id="adStyle2" class="ad-style ad-style-centered">
             <div class="ad-text-wrap">
-              <div id="adTitle2" class="ad-title">Titlu reclamă</div>
-              <div id="adDesc2" class="ad-desc">Descriere reclamă</div>
+              <div id="adTitle2" class="ad-title">Titlu reclama</div>
+              <div id="adDesc2" class="ad-desc">Descriere reclama</div>
             </div>
           </div>
 
           <div id="adStyle3" class="ad-style ad-style-card">
             <div class="ad-card">
               <div class="ad-card-line"></div>
-              <div id="adTitle3" class="ad-title">Titlu reclamă</div>
-              <div id="adDesc3" class="ad-desc">Descriere reclamă</div>
+              <div id="adTitle3" class="ad-title">Titlu reclama</div>
+              <div id="adDesc3" class="ad-desc">Descriere reclama</div>
             </div>
           </div>
         </div>
@@ -680,41 +888,42 @@
   <script>
     const STREAM_URL = "https://sonic2-rbx.cloud-center.ro:8012/stream";
 
-    //const AD_INTERVAL = 2 * 60 * 1000;
-    //const AD_DURATION = 30 * 1000;
-    //const SLIDE_DURATION = 8000;
+    const AD_INTERVAL = 5 * 60 * 1000;
+    const AD_DURATION = 30 * 1000;
+    const SLIDE_DURATION = 8000;
 
     const adLayouts = ["cinematic", "centered", "card"];
 
     const ads = [
       {
         type: "image",
-        title: "Habar n-am\nLa misto",
-        desc: "Descriere bomba sa moara lumea",
+        title: "Espresso intens.\nDimineață perfectă.",
+        desc: "Arome puternice, gust premium și o prezentare elegantă.",
         image: "photo1.jpg"
       },
       {
         type: "image",
-        title: "Habar n-am\nLa misto",
-        desc: "Descriere bomba sa moara lumea",
+        title: "Ceva dulce.\nMereu o alegere bună.",
+        desc: "Prăjituri fresh, plating premium și combinații care atrag imediat privirea.",
         image: "photo1.jpg"
       },
       {
         type: "image",
-        title: "Habar n-am\nLa misto",
-        desc: "Descriere bomba sa moara lumea",
+        title: "Mic dejun + cafea.\nCombinația ideală.",
+        desc: "Preparate care arată premium și se potrivesc perfect pe ecran.",
         image: "photo1.jpg"
       },
-      /*
-      {
+     /* {
         type: "video",
-        title: "Habar n-am\nLa misto",
-        desc: "Descriere bomba sa moara lumea",
-        video: "videos/reclama-video.mp4"
+        title: "Locul perfect\npentru o pauză bună.",
+        desc: "Design elegant, mișcare cinematică și experiență vizuală premium.",
+        video: "video.mp4"
       }
-      */
+     */
     ];
 
+    const homeLayer = document.getElementById("homeLayer");
+    const wifiQr = document.getElementById("wifiQr");
     const radioPlayer = document.getElementById("radioPlayer");
     radioPlayer.src = STREAM_URL;
 
@@ -855,7 +1064,26 @@
       document.documentElement.style.setProperty('--subtitle-opacity', subtitleOpacity.toFixed(3));
     }
 
+    function startBurnInProtection() {
+      const positions = [
+        { x: 0, y: 0 },
+        { x: 4, y: -3 },
+        { x: -3, y: 2 },
+        { x: 2, y: 4 },
+        { x: -4, y: -2 }
+      ];
+      let i = 0;
+
+      setInterval(() => {
+        i = (i + 1) % positions.length;
+        document.documentElement.style.setProperty('--burn-x', positions[i].x + 'px');
+        document.documentElement.style.setProperty('--burn-y', positions[i].y + 'px');
+      }, 30000);
+    }
+
+
     tryPlayAudio();
+    startBurnInProtection();
 
     setInterval(() => {
       if (radioPlayer.paused) {
@@ -900,10 +1128,12 @@
             <video autoplay muted loop playsinline preload="auto">
               <source src="${ad.video}" type="video/mp4">
             </video>
+            <div class="light-sweep"></div>
           `;
         } else {
           slide.innerHTML = `
             <img src="${ad.image}" alt="${escapeHtml(ad.title || 'Reclamă')}">
+            <div class="light-sweep"></div>
           `;
         }
 
@@ -948,6 +1178,20 @@
       adDesc3.textContent = ad.desc || "";
     }
 
+    function resetTextAnimations() {
+      [adTitle1, adDesc1, adTitle2, adDesc2, adTitle3, adDesc3].forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetHeight;
+        el.style.animation = '';
+      });
+
+      document.querySelectorAll('.ad-card-line').forEach(el => {
+        el.style.animation = 'none';
+        void el.offsetHeight;
+        el.style.animation = '';
+      });
+    }
+
     function activateSlide(index) {
       const slides = adSlides.querySelectorAll(".ad-slide");
       pauseAllSlideVideos();
@@ -962,6 +1206,7 @@
       const ad = ads[index];
       setAdText(ad);
       setAdLayout(index);
+      resetTextAnimations();
 
       currentSlideIndex = index;
     }
@@ -988,7 +1233,14 @@
 
     function showAdsOverlay() {
       buildSlides();
-      adOverlay.classList.add("show");
+      homeLayer.classList.add("dimmed");
+      wifiQr.classList.add("dimmed");
+
+      adOverlay.style.display = "flex";
+      requestAnimationFrame(() => {
+        adOverlay.classList.add("show");
+      });
+
       adSessionStart = performance.now();
 
       startSlideShow();
@@ -1002,8 +1254,17 @@
 
     function hideAdsOverlay() {
       adOverlay.classList.remove("show");
+      homeLayer.classList.remove("dimmed");
+      wifiQr.classList.remove("dimmed");
+
       stopSlideShow();
       stopAdProgress();
+
+      setTimeout(() => {
+        if (!adOverlay.classList.contains("show")) {
+          adOverlay.style.display = "none";
+        }
+      }, 700);
     }
 
     function scheduleAds() {
@@ -1042,9 +1303,8 @@
 
     scheduleAds();
 
-    
-  //setTimeout(showAdsOverlay, 3000); // de test
-    
+    // TEST RAPID
+     setTimeout(showAdsOverlay, 3000);
   </script>
 </body>
 </html>
