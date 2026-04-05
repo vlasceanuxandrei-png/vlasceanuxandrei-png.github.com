@@ -951,8 +951,8 @@
       },
       {
         type: "video",
-        title: "Locul perfect\npentru o pauză bună.",
-        desc: "Design elegant, mișcare cinematică și experiență vizuală premium.",
+        //title: "Locul perfect\npentru o pauză bună.",
+        //desc: "Design elegant, mișcare cinematică și experiență vizuală premium.",
         video: "video.mp4"
       }
      
@@ -1056,7 +1056,8 @@
         if (timestamp < marqueePauseUntil) {
           textEl.style.transform = `translateX(${-marqueeOffset}px)`;
         } else {
-          marqueeOffset += marqueeCurrentSpeed * delta;
+          const smoothSpeed = marqueeCurrentSpeed * (0.6 + Math.sin(performance.now() * 0.002) * 0.4);
+          marqueeOffset += smoothSpeed * delta;
     
           if (marqueeOffset >= marqueeMaxOffset) {
             marqueeOffset = marqueeMaxOffset;
@@ -1083,8 +1084,16 @@
       if (!textEl) return;
     
       const currentText = textEl.textContent.trim();
+    
       if (refreshMarqueeIfTextChanged.lastText !== currentText) {
         refreshMarqueeIfTextChanged.lastText = currentText;
+    
+        textEl.style.textShadow = "0 0 18px rgba(249,242,223,0.35), 0 0 28px rgba(70,33,33,0.25)";
+    
+        setTimeout(() => {
+          textEl.style.textShadow = "";
+        }, 800);
+    
         setupMarquee();
       }
     }
