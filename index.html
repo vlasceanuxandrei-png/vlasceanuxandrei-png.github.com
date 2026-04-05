@@ -793,6 +793,17 @@
         max-width: 90vw;
       }
     }
+      .np-wrap {
+        max-width: 420px; 
+        overflow: hidden;
+        position: relative;
+      }
+      
+      .np-text {
+        display: inline-block;
+        white-space: nowrap;
+        will-change: transform;
+      }
 
     @media (max-width: 700px) {
       .main-stage {
@@ -829,7 +840,7 @@
         <div class="brand-core">
           <div class="sound-ring"></div>
           <div class="logo-glow"></div>
-          <div class="now-playing"><div id='sonic_title'></div></div>
+         <div class="np-wrap"><div class="now-playing"><div id='sonic_title'></div></div></div>
           <div id="brandLogo" class="brand-logo">Velmora</div>
           <div id="brandSub" class="brand-sub">coffee and stories</div>
         </div>
@@ -1304,6 +1315,32 @@
     adOverlay.addEventListener("click", hideAdsOverlay);
 
     scheduleAds();
+
+    function applyMarquee() {
+  const el = document.getElementById("sonic_title");
+  if (!el) return;
+
+  const parent = el.parentElement;
+
+  // reset
+  el.style.animation = "none";
+  el.style.transform = "translateX(0)";
+
+  // forțează reflow
+  void el.offsetWidth;
+
+  const textWidth = el.scrollWidth;
+  const containerWidth = parent.offsetWidth;
+
+  if (textWidth <= containerWidth) {
+    // dacă încape → nu animăm
+    return;
+  }
+
+  const distance = textWidth - containerWidth + 40;
+
+  el.style.animation = `marqueeMove ${distance / 40}s linear infinite`;
+}
 
     // TEST RAPID
     // setTimeout(showAdsOverlay, 3000);
