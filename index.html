@@ -811,6 +811,40 @@
         font-size: clamp(16px, 5vw, 24px);
       }
     }
+
+      .np-wrap {
+        position: relative;
+        max-width: 420px;
+        overflow: hidden;
+      }
+      
+      .np-text {
+        display: inline-block;
+        white-space: nowrap;
+        will-change: transform;
+        transform: translateX(0);
+      }
+      
+      .np-wrap::before,
+      .np-wrap::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        width: 34px;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+      }
+      
+      .np-wrap::before {
+        left: 0;
+        background: linear-gradient(to right, rgba(5,5,5,0.95), transparent);
+      }
+      
+      .np-wrap::after {
+        right: 0;
+        background: linear-gradient(to left, rgba(5,5,5,0.95), transparent);
+      }
   </style>
 </head>
 <body>
@@ -829,7 +863,7 @@
         <div class="brand-core">
           <div class="sound-ring"></div>
           <div class="logo-glow"></div>
-         <div class="np-wrap"><div class="now-playing"><div id='sonic_title'></div></div></div>
+         <div class="now-playing"><div class="np-wrap"><div id='sonic_title'></div></div></div>
           <div id="brandLogo" class="brand-logo">Velmora</div>
           <div id="brandSub" class="brand-sub">coffee and stories</div>
         </div>
@@ -951,6 +985,14 @@
     let currentSlideIndex = 0;
     let adSessionStart = 0;
 
+    let marqueeOffset = 0;
+    let marqueeMaxOffset = 0;
+    let marqueeRunning = false;
+    let marqueeLastTime = 0;
+    let marqueeBaseSpeed = 28;
+    let marqueeCurrentSpeed = 28;
+    let marqueePauseUntil = 0;
+
     let audioCtx = null;
     let analyser = null;
     let sourceNode = null;
@@ -964,6 +1006,89 @@
         console.log("Autoplay blocat de browser până la interacțiune:", err);
       }
     }
+
+    function setupMarquee() {
+      const textEl = document.getElementById("sonic_title");
+      const wrapEl = document.querySelector(".np-wrap");
+    
+      if (!textEl || !wrapEl) return;
+    
+      marqueeOffset = 0;
+      marqueePauseUntil = 0;
+      textEl.style.transform = "translateX(0px)";
+    
+      const textWidth = textEl.scrollWidth;
+      const wrapWidth = wrapEl.clientWidth;
+    
+      if (!textEl.textContent.trim() || textEl.textContent.trim().toLowerCase() === "now playing") {
+        marqueeRunning = false;
+        marqueeMaxOffset = 0;
+        return;
+      }
+    
+      if (textWidth <= wrapWidth) {
+        marqueeRunning = false;
+        marqueeMaxOffset = 0;
+        return;
+      }
+    
+      marqueeRunning = true;
+      marqueeMaxOffset = textWidth - wrapWidth + 40;
+    }
+    
+    function animateMarquee(timestamp) {
+      const textEl = document.getElementById("sonic_title");
+      if (!textEl) {
+        requestAnimationFrame(animateMarquee);
+        return;
+      }
+    
+      if (!marqueeLastTime) marqueeLastTime = timestamp;
+      const delta = (timestamp - marqueeLastTime) / 1000;
+      marqueeLastTime = timestamp;
+
+      if (radioPlayer.paused) {
+        requestAnimationFrame(animateMarquee);
+        return;
+      }
+    
+      if (marqueeRunning) {
+        if (timestamp < marqueePauseUntil) {
+          textEl.style.transform = `translateX(${-marqueeOffset}px)`;
+        } else {
+          marqueeOffset += marqueeCurrentSpeed * delta;
+    
+          if (marqueeOffset >= marqueeMaxOffset) {
+            marqueeOffset = marqueeMaxOffset;
+            marqueePauseUntil = timestamp + 1400;
+            marqueeRunning = false;
+    
+            setTimeout(() => {
+              marqueeOffset = 0;
+              textEl.style.transform = "translateX(0px)";
+              marqueePauseUntil = performance.now() + 900;
+              marqueeRunning = marqueeMaxOffset > 0;
+            }, 1600);
+          }
+    
+          textEl.style.transform = `translateX(${-marqueeOffset}px)`;
+        }
+      }
+    
+      requestAnimationFrame(animateMarquee);
+    }
+    
+    function refreshMarqueeIfTextChanged() {
+      const textEl = document.getElementById("sonic_title");
+      if (!textEl) return;
+    
+      const currentText = textEl.textContent.trim();
+      if (refreshMarqueeIfTextChanged.lastText !== currentText) {
+        refreshMarqueeIfTextChanged.lastText = currentText;
+        setupMarquee();
+      }
+    }
+    refreshMarqueeIfTextChanged.lastText = "";
 
     async function initAudioReactive() {
       if (usingAnalyser) return;
@@ -1003,7 +1128,7 @@
         const ringOpacity = 0.18 + fake * 0.24;
         const subtitleOpacity = 0.90 + fake * 0.10;
 
-        applyReactiveStyles({ scale, blur, glow, y, ringScale, ringOpacity, subtitleOpacity });
+        applyReactiveStyles({ scale, blur, glow, y, ringScale, ringOpacity, subtitleOpacity, energy: fake });
         requestAnimationFrame(loop);
       }
 
@@ -1043,28 +1168,31 @@
       const ringOpacity = 0.18 + energy * 0.34;
       const subtitleOpacity = 0.90 + energy * 0.10;
 
-      applyReactiveStyles({ scale, blur, glow, y, ringScale, ringOpacity, subtitleOpacity });
+      applyReactiveStyles({ scale, blur, glow, y, ringScale, ringOpacity, subtitleOpacity, energy });
 
       requestAnimationFrame(animateAudioReactive);
     }
 
-    function applyReactiveStyles({
-      scale,
-      blur,
-      glow,
-      y,
-      ringScale,
-      ringOpacity,
-      subtitleOpacity
-    }) {
-      document.documentElement.style.setProperty('--logo-scale', scale.toFixed(4));
-      document.documentElement.style.setProperty('--logo-blur', blur.toFixed(3) + 'px');
-      document.documentElement.style.setProperty('--logo-glow', glow.toFixed(3));
-      document.documentElement.style.setProperty('--logo-y', y.toFixed(2) + 'px');
-      document.documentElement.style.setProperty('--ring-scale', ringScale.toFixed(4));
-      document.documentElement.style.setProperty('--ring-opacity', ringOpacity.toFixed(3));
-      document.documentElement.style.setProperty('--subtitle-opacity', subtitleOpacity.toFixed(3));
-    }
+      function applyReactiveStyles({
+        scale,
+        blur,
+        glow,
+        y,
+        ringScale,
+        ringOpacity,
+        subtitleOpacity,
+        energy = 0
+      }) {
+        document.documentElement.style.setProperty('--logo-scale', scale.toFixed(4));
+        document.documentElement.style.setProperty('--logo-blur', blur.toFixed(3) + 'px');
+        document.documentElement.style.setProperty('--logo-glow', glow.toFixed(3));
+        document.documentElement.style.setProperty('--logo-y', y.toFixed(2) + 'px');
+        document.documentElement.style.setProperty('--ring-scale', ringScale.toFixed(4));
+        document.documentElement.style.setProperty('--ring-opacity', ringOpacity.toFixed(3));
+        document.documentElement.style.setProperty('--subtitle-opacity', subtitleOpacity.toFixed(3));
+      
+        marqueeCurrentSpeed = marqueeBaseSpeed + energy * 26;
+      }
 
     function startBurnInProtection() {
       const positions = [
@@ -1304,6 +1432,10 @@
     adOverlay.addEventListener("click", hideAdsOverlay);
 
     scheduleAds();
+    
+    setTimeout(setupMarquee, 1500);
+    setInterval(refreshMarqueeIfTextChanged, 1500);
+    requestAnimationFrame(animateMarquee);
 
 
     // TEST RAPID
