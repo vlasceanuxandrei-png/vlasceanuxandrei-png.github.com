@@ -787,6 +787,54 @@
       .wifi-qr .qr-label {
         font-size: 13px;
       }
+      .brand-core {
+      padding-top: 34px;
+    }
+
+      .now-playing {
+        position: absolute;
+        top: -26px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 16px;
+        max-width: 78vw;
+        width: 78vw;
+        text-align: center;
+        white-space: nowrap;
+        z-index: 8;
+      }
+    
+      .np-wrap {
+        max-width: 78vw;
+        width: 78vw;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+    
+      .np-text {
+        display: inline-block;
+        white-space: nowrap;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .brand-core {
+        padding-top: 28px;
+      }
+    
+      .now-playing {
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        max-width: 82vw;
+        width: 82vw;
+      }
+    
+      .np-wrap {
+        max-width: 82vw;
+        width: 82vw;
+      }
     }
 
     @media (max-width: 700px) {
