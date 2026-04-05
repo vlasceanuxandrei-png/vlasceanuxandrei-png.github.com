@@ -1221,83 +1221,96 @@
         logo.textContent = text;
       }
 
-      const logoEffects = ["typewriter", "glitch", "flicker", "wave", "zoomflash"];
-      let currentLogoEffectIndex = 0;
-      let logoEffectTimer = null;
-      let logoEffectRunning = false;
+        const logoEffects = ["typewriter", "glitch", "flicker", "wave", "zoomflash"];
+        let currentLogoEffectIndex = 0;
+        let logoEffectTimer = null;
+        let logoEffectRunning = false;
 
-      function clearLogoEffects() {
-        const logo = document.getElementById("brandLogo");
-        if (!logo) return;
+        function clearLogoEffects() {
+          const logo = document.getElementById("brandLogo");
+          if (!logo) return;
 
-        logo.classList.remove(
-          "fx-typewriter",
-          "fx-glitch",
-          "fx-flicker",
-          "fx-wave",
-          "fx-zoomflash"
-        );
-      }
+          logo.classList.remove(
+            "fx-typewriter",
+            "fx-glitch",
+            "fx-flicker",
+            "fx-wave",
+            "fx-zoomflash"
+          );
+        }
 
-      function runLogoEffect(effectName) {
-        const logo = document.getElementById("brandLogo");
-        if (!logo || logoEffectRunning) return;
+        function runLogoEffect(effectName) {
+          const logo = document.getElementById("brandLogo");
+          if (!logo) return;
+          if (logoEffectRunning) return;
 
-        logoEffectRunning = true;
-        clearLogoEffects();
+          logoEffectRunning = true;
+          clearLogoEffects();
 
-        if (effectName === "typewriter") {
-          splitLogoLetters();
-          logo.classList.add("fx-typewriter");
+          if (effectName === "typewriter") {
+            splitLogoLetters();
+            logo.classList.add("fx-typewriter");
+
+            setTimeout(() => {
+              restoreLogoText();
+              clearLogoEffects();
+              logoEffectRunning = false;
+            }, 3200);
+
+            return;
+          }
+
+          restoreLogoText();
+
+          const classMap = {
+            glitch: "fx-glitch",
+            flicker: "fx-flicker",
+            wave: "fx-wave",
+            zoomflash: "fx-zoomflash"
+          };
+
+          const durationMap = {
+            glitch: 1400,
+            flicker: 1800,
+            wave: 2400,
+            zoomflash: 1800
+          };
+
+          const className = classMap[effectName];
+          const duration = durationMap[effectName] || 1800;
+
+          if (className) {
+            logo.classList.add(className);
+          }
 
           setTimeout(() => {
-            restoreLogoText();
             clearLogoEffects();
+            restoreLogoText();
             logoEffectRunning = false;
-          }, 3200);
-          return;
+          }, duration);
         }
 
-        restoreLogoText();
+        function triggerNextLogoEffect() {
+          if (logoEffectRunning) return;
 
-        const classMap = {
-          glitch: "fx-glitch",
-          flicker: "fx-flicker",
-          wave: "fx-wave",
-          zoomflash: "fx-zoomflash"
-        };
-
-        const durationMap = {
-          glitch: 200,
-          flicker: 400,
-          wave: 600,
-          zoomflash: 800
-        };
-
-        const className = classMap[effectName];
-        const duration = durationMap[effectName] || 1800;
-
-        if (className) {
-          logo.classList.add(className);
-        }
-
-        setTimeout(() => {
-          clearLogoEffects();
-          logoEffectRunning = false;
-        }, duration);
-      }
-
-      function startLogoEffectsRotation() {
-        clearInterval(logoEffectTimer);
-
-        logoEffectTimer = setInterval(() => {
-          if (adOverlay.classList.contains("show")) return;
+          const adVisible = adOverlay && adOverlay.classList.contains("show");
+          if (adVisible) return;
 
           const effect = logoEffects[currentLogoEffectIndex];
           runLogoEffect(effect);
           currentLogoEffectIndex = (currentLogoEffectIndex + 1) % logoEffects.length;
-        }, 3 * 60 * 1000);
-      }
+        }
+
+        function startLogoEffectsRotation() {
+          clearInterval(logoEffectTimer);
+
+          // prima rulare după 3 minute
+          logoEffectTimer = setInterval(() => {
+            triggerNextLogoEffect();
+          }, 1 * 60 * 1000);
+
+          console.log("Logo effects rotation started");
+        }
 
       function setupMarquee() {
         const textEl = document.getElementById("sonic_title");
