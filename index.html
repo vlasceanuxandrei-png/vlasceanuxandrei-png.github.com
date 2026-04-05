@@ -1141,26 +1141,26 @@
       
       {
         type: "image",
-        //title: "Espresso intens.\nDimineață perfectă.",
-       //desc: "Arome puternice, gust premium și o prezentare elegantă.",
+        title: "Titlu\nSubtitlu",
+        desc: "Descriere",
         image: "photo1.jpg"
       },
       {
         type: "image",
-        //title: "Ceva dulce.\nMereu o alegere bună.",
-        //desc: "Prăjituri fresh, plating premium și combinații care atrag imediat privirea.",
+        title: "Titlu\nSubtitlu",
+        desc: "Descriere",
         image: "photo1.jpg"
       },
       {
         type: "image",
-        //title: "Mic dejun + cafea.\nCombinația ideală.",
-        //desc: "Preparate care arată premium și se potrivesc perfect pe ecran.",
+        title: "Titlu\nSubtitlu",
+        desc: "Descriere",
         image: "photo1.jpg"
       },
       {
         type: "video",
-        //title: "Locul perfect\npentru o pauză bună.",
-        //desc: "Design elegant, mișcare cinematică și experiență vizuală premium.",
+        title: "Titlu\nSubtitlu",
+        desc: "Descriere",
         video: "video.mp4"
       }
      
@@ -1324,7 +1324,6 @@
         function startLogoEffectsRotation() {
           clearInterval(logoEffectTimer);
 
-          // prima rulare după 3 minute
           logoEffectTimer = setInterval(() => {
             triggerNextLogoEffect();
           }, 1 * 60 * 1000);
@@ -1769,7 +1768,7 @@
 
     adOverlay.addEventListener("click", hideAdsOverlay);
 
-    //scheduleAds();
+    scheduleAds();
     
     setTimeout(setupMarquee, 1500);
     setInterval(refreshMarqueeIfTextChanged, 1500);
