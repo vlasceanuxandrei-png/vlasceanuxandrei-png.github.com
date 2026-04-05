@@ -1221,6 +1221,84 @@
         logo.textContent = text;
       }
 
+      const logoEffects = ["typewriter", "glitch", "flicker", "wave", "zoomflash"];
+      let currentLogoEffectIndex = 0;
+      let logoEffectTimer = null;
+      let logoEffectRunning = false;
+
+      function clearLogoEffects() {
+        const logo = document.getElementById("brandLogo");
+        if (!logo) return;
+
+        logo.classList.remove(
+          "fx-typewriter",
+          "fx-glitch",
+          "fx-flicker",
+          "fx-wave",
+          "fx-zoomflash"
+        );
+      }
+
+      function runLogoEffect(effectName) {
+        const logo = document.getElementById("brandLogo");
+        if (!logo || logoEffectRunning) return;
+
+        logoEffectRunning = true;
+        clearLogoEffects();
+
+        if (effectName === "typewriter") {
+          splitLogoLetters();
+          logo.classList.add("fx-typewriter");
+
+          setTimeout(() => {
+            restoreLogoText();
+            clearLogoEffects();
+            logoEffectRunning = false;
+          }, 3200);
+          return;
+        }
+
+        restoreLogoText();
+
+        const classMap = {
+          glitch: "fx-glitch",
+          flicker: "fx-flicker",
+          wave: "fx-wave",
+          zoomflash: "fx-zoomflash"
+        };
+
+        const durationMap = {
+          glitch: 1400,
+          flicker: 1800,
+          wave: 2400,
+          zoomflash: 1800
+        };
+
+        const className = classMap[effectName];
+        const duration = durationMap[effectName] || 1800;
+
+        if (className) {
+          logo.classList.add(className);
+        }
+
+        setTimeout(() => {
+          clearLogoEffects();
+          logoEffectRunning = false;
+        }, duration);
+      }
+
+      function startLogoEffectsRotation() {
+        clearInterval(logoEffectTimer);
+
+        logoEffectTimer = setInterval(() => {
+          if (adOverlay.classList.contains("show")) return;
+
+          const effect = logoEffects[currentLogoEffectIndex];
+          runLogoEffect(effect);
+          currentLogoEffectIndex = (currentLogoEffectIndex + 1) % logoEffects.length;
+        }, 3 * 60 * 1000);
+      }
+
       function setupMarquee() {
         const textEl = document.getElementById("sonic_title");
         const wrapEl = document.querySelector(".np-wrap");
@@ -1664,9 +1742,11 @@
     setInterval(refreshMarqueeIfTextChanged, 1500);
     requestAnimationFrame(animateMarquee);
 
-
-    // TEST RAPID
+    startLogoEffectsRotation();
+  
     // setTimeout(showAdsOverlay, 3000);
+     setTimeout(() => runLogoEffect("typewriter"), 2000);
+     setTimeout(() => runLogoEffect("glitch"), 5000);
   </script>
 </body>
 </html>
