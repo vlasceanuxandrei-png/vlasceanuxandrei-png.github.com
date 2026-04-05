@@ -1241,7 +1241,7 @@
         logo.textContent = text;
       }
 
-        const logoEffects = ["typewriter", "glitch", "flicker", "wave", "zoomflash"];
+        const logoEffects = ["glitch", "flicker", "zoomflash"];
         let currentLogoEffectIndex = 0;
         let logoEffectTimer = null;
         let logoEffectRunning = false;
@@ -1251,10 +1251,10 @@
           if (!logo) return;
 
           logo.classList.remove(
-            //"fx-typewriter",
+            "fx-typewriter",
             "fx-glitch",
             "fx-flicker",
-            //"fx-wave",
+            "fx-wave",
             "fx-zoomflash"
           );
         }
