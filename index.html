@@ -466,6 +466,20 @@
         transform: translateY(var(--logo-y)) scale(calc(var(--logo-scale) + 0.01));
       }
     }
+
+    .brand-logo.fx-typewriter .logo-letter {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: logoLetterIn 0.45s ease forwards;
+    }
+
+    @keyframes logoLetterIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .wifi-qr {
       position: fixed;
       right: 28px;
@@ -1181,6 +1195,31 @@
         console.log("Autoplay blocat de browser până la interacțiune:", err);
       }
     }
+
+      function splitLogoLetters() {
+        const logo = document.getElementById("brandLogo");
+        if (!logo) return;
+
+        const text = logo.dataset.originalText || logo.textContent.trim() || "Velmora";
+        logo.dataset.originalText = text;
+        logo.innerHTML = "";
+
+        [...text].forEach((char, index) => {
+          const span = document.createElement("span");
+          span.className = "logo-letter";
+          span.textContent = char;
+          span.style.display = "inline-block";
+          span.style.animationDelay = `${index * 0.08}s`;
+          logo.appendChild(span);
+        });
+      }
+
+      function restoreLogoText() {
+        const logo = document.getElementById("brandLogo");
+        if (!logo) return;
+        const text = logo.dataset.originalText || "Velmora";
+        logo.textContent = text;
+      }
 
       function setupMarquee() {
         const textEl = document.getElementById("sonic_title");
