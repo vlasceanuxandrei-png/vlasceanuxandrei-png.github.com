@@ -797,16 +797,14 @@
         left: 50%;
         transform: translateX(-50%);
         font-size: 16px;
-        max-width: 78vw;
         width: 78vw;
+        max-width: 78vw;
         text-align: center;
-        white-space: nowrap;
-        z-index: 8;
       }
     
       .np-wrap {
-        max-width: 78vw;
         width: 78vw;
+        max-width: 78vw;
         margin: 0 auto;
         overflow: hidden;
       }
@@ -1030,10 +1028,11 @@
 
     let marqueeOffset = 0;
     let marqueeMaxOffset = 0;
-    let marqueeRunning = false;
     let marqueeLastTime = 0;
-    let marqueeBaseSpeed = 28;
-    let marqueeCurrentSpeed = 28;
+    let marqueeBaseSpeed = 22;
+    let marqueeCurrentSpeed = 22;
+    let marqueeDirection = 1;
+    let marqueeEnabled = false;
     let marqueePauseUntil = 0;
 
     let audioCtx = null;
@@ -1050,77 +1049,81 @@
       }
     }
 
-    function setupMarquee() {
-      const textEl = document.getElementById("sonic_title");
-      const wrapEl = document.querySelector(".np-wrap");
-    
-      if (!textEl || !wrapEl) return;
-    
-      marqueeOffset = 0;
-      marqueePauseUntil = 0;
-      textEl.style.transform = "translateX(0px)";
-    
-      const textWidth = textEl.scrollWidth;
-      const wrapWidth = wrapEl.clientWidth;
-    
-      if (!textEl.textContent.trim() || textEl.textContent.trim().toLowerCase() === "now playing") {
-        marqueeRunning = false;
-        marqueeMaxOffset = 0;
-        return;
+      function setupMarquee() {
+        const textEl = document.getElementById("sonic_title");
+        const wrapEl = document.querySelector(".np-wrap");
+      
+        if (!textEl || !wrapEl) return;
+      
+        marqueeOffset = 0;
+        marqueeDirection = 1;
+        marqueePauseUntil = 0;
+        textEl.style.transform = "translateX(0px)";
+      
+        const textWidth = textEl.scrollWidth;
+        const wrapWidth = wrapEl.clientWidth;
+        const textValue = textEl.textContent.trim();
+      
+        if (!textValue || textValue.toLowerCase() === "now playing") {
+          marqueeEnabled = false;
+          marqueeMaxOffset = 0;
+          return;
+        }
+      
+        if (textWidth <= wrapWidth) {
+          marqueeEnabled = false;
+          marqueeMaxOffset = 0;
+          return;
+        }
+      
+        marqueeMaxOffset = textWidth - wrapWidth;
+        marqueeEnabled = true;
       }
     
-      if (textWidth <= wrapWidth) {
-        marqueeRunning = false;
-        marqueeMaxOffset = 0;
-        return;
-      }
-    
-      marqueeRunning = true;
-      marqueeMaxOffset = textWidth - wrapWidth + 40;
-    }
-    
-    function animateMarquee(timestamp) {
-      const textEl = document.getElementById("sonic_title");
-      if (!textEl) {
-        requestAnimationFrame(animateMarquee);
-        return;
-      }
-    
-      if (!marqueeLastTime) marqueeLastTime = timestamp;
-      const delta = (timestamp - marqueeLastTime) / 1000;
-      marqueeLastTime = timestamp;
-
-      if (radioPlayer.paused) {
-        requestAnimationFrame(animateMarquee);
-        return;
-      }
-    
-      if (marqueeRunning) {
+      function animateMarquee(timestamp) {
+        const textEl = document.getElementById("sonic_title");
+        if (!textEl) {
+          requestAnimationFrame(animateMarquee);
+          return;
+        }
+      
+        if (!marqueeLastTime) marqueeLastTime = timestamp;
+        const delta = (timestamp - marqueeLastTime) / 1000;
+        marqueeLastTime = timestamp;
+      
+        if (radioPlayer.paused) {
+          requestAnimationFrame(animateMarquee);
+          return;
+        }
+      
+        if (!marqueeEnabled) {
+          textEl.style.transform = "translateX(0px)";
+          requestAnimationFrame(animateMarquee);
+          return;
+        }
+      
         if (timestamp < marqueePauseUntil) {
           textEl.style.transform = `translateX(${-marqueeOffset}px)`;
-        } else {
-          const smoothSpeed = marqueeCurrentSpeed * (0.6 + Math.sin(performance.now() * 0.002) * 0.4);
-          marqueeOffset += smoothSpeed * delta;
-    
-          if (marqueeOffset >= marqueeMaxOffset) {
-            marqueeOffset = marqueeMaxOffset;
-            marqueePauseUntil = timestamp + 1400;
-            marqueeRunning = false;
-    
-            setTimeout(() => {
-              marqueeOffset = 0;
-              textEl.style.transform = "translateX(0px)";
-              marqueePauseUntil = performance.now() + 900;
-              marqueeRunning = marqueeMaxOffset > 0;
-            }, 1600);
-          }
-    
-          textEl.style.transform = `translateX(${-marqueeOffset}px)`;
+          requestAnimationFrame(animateMarquee);
+          return;
         }
+      
+        marqueeOffset += marqueeDirection * marqueeCurrentSpeed * delta;
+      
+        if (marqueeOffset >= marqueeMaxOffset) {
+          marqueeOffset = marqueeMaxOffset;
+          marqueeDirection = -1;
+          marqueePauseUntil = timestamp + 1200;
+        } else if (marqueeOffset <= 0) {
+          marqueeOffset = 0;
+          marqueeDirection = 1;
+          marqueePauseUntil = timestamp + 1200;
+        }
+      
+        textEl.style.transform = `translateX(${-marqueeOffset}px)`;
+      
+        requestAnimationFrame(animateMarquee);
       }
-    
-      requestAnimationFrame(animateMarquee);
-    }
     
     function refreshMarqueeIfTextChanged() {
       const textEl = document.getElementById("sonic_title");
