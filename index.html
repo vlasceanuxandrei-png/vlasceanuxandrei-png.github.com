@@ -1033,6 +1033,27 @@
         right: 0;
         background: linear-gradient(to left, rgba(5,5,5,0.95), transparent);
       }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at 50% 50%, rgba(70,33,33,0.08), transparent 60%);
+        animation: ambientPulse 6s ease-in-out infinite;
+        z-index: 1;
+      }
+
+      @keyframes ambientPulse {
+        0%, 100% {
+          opacity: 0.6;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
   </style>
 </head>
 <body>
