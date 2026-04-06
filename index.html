@@ -332,9 +332,6 @@
       }
     }
   
-    .brand-logo {
-      position: relative;
-    }
 
     .brand-logo.fx-typewriter {
       animation: logoTypewriter 3.2s steps(8, end);
@@ -1359,16 +1356,6 @@
       }
     }
 
-    .tagline .tagline-letter {
-      display: inline-block;
-      opacity: 0;
-      transform: translateY(8px);
-    }
-
-    .tagline.reveal .tagline-letter {
-      animation: taglineLetterReveal 0.45s ease forwards;
-    }
-
     @keyframes taglineLetterReveal {
       to {
         opacity: 1;
@@ -1912,16 +1899,18 @@ specialMessage.textContent = data.message || "";
           }
           specialVideo.play().catch(() => {});
         } else {
-          specialVideo.pause();
-          specialVideo.removeAttribute("src");
-          specialVideo.setAttribute("data-current-src", "");
-        }
+  specialVideo.pause();
+  specialVideo.removeAttribute("src");
+  specialVideo.setAttribute("data-current-src", "");
+  specialVideo.load();
+}
       }
 
-      if (radioPlayer) {
-        radioPlayer.pause();
-        radioPlayer.src = "";
-      }
+if (radioPlayer) {
+  radioPlayer.pause();
+  radioPlayer.src = "";
+  radioPlayer.load();
+}
 
       if (specialAudio) {
         if (data.audio) {
@@ -2062,15 +2051,15 @@ async function updateActiveSpecialOverlay(data) {
 
         specialModeActive = false;
         specialAudioMode = false;
-
-        if (radioPlayer) {
-          radioPlayer.src = STREAM_URL;
-          try {
-            await radioPlayer.play();
-          } catch (e) {
-            console.log("Radio restart blocked:", e);
-          }
-        }
+if (radioPlayer) {
+  radioPlayer.src = STREAM_URL;
+  radioPlayer.load();
+  try {
+    await radioPlayer.play();
+  } catch (e) {
+    console.log("Radio restart blocked:", e);
+  }
+}
       }
 
 async function checkSpecialOverlay() {
@@ -2100,18 +2089,19 @@ async function checkSpecialOverlay() {
     const hasDedicationContent = specialType === "dedication" && data.from && data.to && data.message;
 
     if (data.enabled && (hasClassicContent || hasDedicationContent)) {
-      if (!specialModeActive && lastSpecialSignature !== signature) {
-        lastSpecialSignature = signature;
-        await showSpecialOverlay(data);
-      } else if (specialModeActive) {
-        await updateActiveSpecialOverlay(data);
-      }
-    } else {
-      if (specialModeActive) {
-        await hideSpecialOverlay();
-      }
-      lastSpecialSignature = "";
-    }
+  if (!specialModeActive && lastSpecialSignature !== signature) {
+    lastSpecialSignature = signature;
+    await showSpecialOverlay(data);
+  } else if (specialModeActive && lastSpecialSignature !== signature) {
+    lastSpecialSignature = signature;
+    await updateActiveSpecialOverlay(data);
+  }
+} else {
+  if (specialModeActive) {
+    await hideSpecialOverlay();
+  }
+  lastSpecialSignature = "";
+}
   } catch (error) {
     console.log("special.json indisponibil:", error);
   }
