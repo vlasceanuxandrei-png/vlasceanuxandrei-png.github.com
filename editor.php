@@ -435,7 +435,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
     <div class="topbar">
       <div class="brand">
         <div class="brand-title">Velmora</div>
-        <div class="brand-sub">Special Overlay Editor</div>
+       <!-- <div class="brand-sub">Editor special overlay.</div> -->
       </div>
       <a class="logout" href="?logout=1">Logout</a>
     </div>
@@ -488,8 +488,7 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
         </form>
 
         <div class="hint">
-          Fișier editat: <strong>special.json</strong><br>
-          Recomandare: după salvare, pagina principală va citi automat modificările dacă verificarea JSON-ului este deja activă în site.
+          Fisier editat: <strong>special.json</strong><br>
         </div>
       </div>
     </div>
