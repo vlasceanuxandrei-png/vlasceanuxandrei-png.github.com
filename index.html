@@ -1625,6 +1625,8 @@
 
     let specialModeActive = false;
     let specialAudioMode = false;
+    let specialHideTimer = null;
+    let lastSpecialSignature = "";
 
     async function showSpecialOverlay(data) {
       if (!specialOverlay) return;
@@ -1634,7 +1636,6 @@
 
       specialAudioMode = true;
 
- 
       if (specialVideo) {
         if (data.video) {
           const currentVideoSrc = specialVideo.getAttribute("data-current-src") || "";
@@ -1651,12 +1652,11 @@
         }
       }
 
-      
-      if (radioPlayer && !radioPlayer.paused) {
+      if (radioPlayer) {
         radioPlayer.pause();
+        radioPlayer.src = "";
       }
 
-      
       if (specialAudio) {
         if (data.audio) {
           const currentAudioSrc = specialAudio.getAttribute("data-current-src") || "";
@@ -1671,6 +1671,9 @@
           } catch (e) {
             console.log("Special audio blocked:", e);
           }
+        } else {
+          specialAudio.pause();
+          specialAudio.currentTime = 0;
         }
       }
 
@@ -1679,63 +1682,85 @@
       wifiQr.classList.add("dimmed");
 
       specialModeActive = true;
+
+      clearTimeout(specialHideTimer);
+
+      if (data.duration && Number(data.duration) > 0) {
+        specialHideTimer = setTimeout(async () => {
+          await hideSpecialOverlay();
+        }, Number(data.duration) * 1000);
+      }
     }
 
-    async function hideSpecialOverlay() {
-      if (!specialOverlay) return;
+      async function hideSpecialOverlay() {
+        if (!specialOverlay) return;
 
-      specialOverlay.classList.remove("show");
-      homeLayer.classList.remove("dimmed");
-      wifiQr.classList.remove("dimmed");
+        clearTimeout(specialHideTimer);
+        specialHideTimer = null;
 
-      if (specialAudio) {
-        specialAudio.pause();
-        specialAudio.currentTime = 0;
+        specialOverlay.classList.remove("show");
+        homeLayer.classList.remove("dimmed");
+        wifiQr.classList.remove("dimmed");
+
+        if (specialAudio) {
+          specialAudio.pause();
+          specialAudio.currentTime = 0;
+        }
+
+        if (specialVideo) {
+          specialVideo.pause();
+        }
+
+        specialModeActive = false;
+        specialAudioMode = false;
+
+        if (radioPlayer) {
+          radioPlayer.src = STREAM_URL;
+          try {
+            await radioPlayer.play();
+          } catch (e) {
+            console.log("Radio restart blocked:", e);
+          }
+        }
       }
 
-      if (specialVideo) {
-        specialVideo.pause();
-      }
-
-      specialModeActive = false;
-      specialAudioMode = false;
-
-      if (radioPlayer) {
+      async function checkSpecialOverlay() {
         try {
-          await radioPlayer.play();
-        } catch (e) {
-          console.log("Radio restart blocked:", e);
-        }
-      }
-    }
+          const response = await fetch("special.json?ts=" + Date.now(), {
+            cache: "no-store"
+          });
 
-    async function checkSpecialOverlay() {
-      try {
-        const response = await fetch("special.json?ts=" + Date.now(), {
-          cache: "no-store"
-        });
+          if (!response.ok) return;
 
-        if (!response.ok) return;
+          const data = await response.json();
 
-        const data = await response.json();
+          const signature = JSON.stringify({
+            enabled: !!data.enabled,
+            name: data.name || "",
+            message: data.message || "",
+            duration: data.duration || 0,
+            video: data.video || "",
+            audio: data.audio || ""
+          });
 
-        if (data.enabled && data.name && data.message) {
-          if (!specialModeActive) {
-            showSpecialOverlay(data);
+          if (data.enabled && data.name && data.message) {
+            if (!specialModeActive && lastSpecialSignature !== signature) {
+              lastSpecialSignature = signature;
+              showSpecialOverlay(data);
+            } else if (specialModeActive) {
+              specialName.textContent = data.name || "";
+              specialMessage.textContent = data.message || "";
+            }
           } else {
-
-            specialName.textContent = data.name || "";
-            specialMessage.textContent = data.message || "";
+            if (specialModeActive) {
+              hideSpecialOverlay();
+            }
+            lastSpecialSignature = "";
           }
-        } else {
-          if (specialModeActive) {
-            hideSpecialOverlay();
-          }
+        } catch (error) {
+          console.log("special.json indisponibil:", error);
         }
-      } catch (error) {
-        console.log("special.json indisponibil:", error);
       }
-    }
 
       async function loadAdsFromJson() {
       try {
@@ -2010,6 +2035,7 @@
 
     checkSpecialOverlay();
     setInterval(checkSpecialOverlay, 3000);
+
 
     //teste
     // setTimeout(showAdsOverlay, 3000);
