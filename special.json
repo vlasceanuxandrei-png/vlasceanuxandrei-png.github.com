@@ -1,6 +1,8 @@
 {
-  "enabled": false,
+  "enabled": true,
   "name": "Andrei",
   "message": "Habar nu am ce sa pun aici, dar am zis sa pun ceva ca sa nu fie gol",
-  "minOrder": 150
+  "minOrder": 150,
+  "video": "special.mp4",
+  "audio": "special_audio.mp3"
 }
