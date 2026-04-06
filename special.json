@@ -1,7 +1,8 @@
 {
   "enabled": true,
-  "type": "classic",
-  "name": "Andrei",
+  "type": "dedication",
+  "from": "Andrei",
+  "to": "Maria",
   "message": "Mulțumim pentru comandă.",
   "duration": 10,
   "video": "",
