@@ -1,0 +1,29 @@
+{
+  "enabled": true,
+  "items": [
+    {
+      "type": "image",
+      "title": "Titlu\nSubtitlu",
+      "desc": "Descriere.",
+      "image": "photo1.jpg"
+    },
+    {
+      "type": "image",
+      "title": "Titlu\nSubtitlu",
+      "desc": "Descriere.",
+      "image": "photo1.jpg"
+    },
+    {
+      "type": "image",
+      "title": "Titlu\nSubtitlu",
+      "desc": "Descriere.",
+      "image": "photo1.jpg"
+    },
+    {
+      "type": "video",
+      "title": "Titlu\nSubtitlu",
+      "desc": "Descriere.",
+      "video": "video.mp4"
+    }
+  ]
+}

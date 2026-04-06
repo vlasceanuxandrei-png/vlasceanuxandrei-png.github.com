@@ -1053,6 +1053,79 @@
           transform: scale(1.05);
         }
       }
+
+      .special-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at center, rgba(70,33,33,0.20), transparent 40%),
+        rgba(5,5,5,0.72);
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .special-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .special-inner {
+      text-align: center;
+      max-width: 1100px;
+      transform: translateY(18px) scale(0.98);
+      transition: transform 0.7s ease;
+    }
+
+    .special-overlay.show .special-inner {
+      transform: translateY(0) scale(1);
+    }
+
+    .special-name {
+      font-family: 'Amarante', serif;
+      font-size: clamp(72px, 12vw, 220px);
+      line-height: 0.9;
+      color: var(--white);
+      text-shadow:
+        0 8px 30px rgba(0,0,0,0.30),
+        0 0 28px rgba(249,242,223,0.10),
+        0 0 48px rgba(70,33,33,0.24);
+      margin-bottom: 14px;
+      animation: specialFloat 4s ease-in-out infinite;
+    }
+
+    .special-message {
+      font-family: 'Amarante', serif;
+      font-size: clamp(22px, 2.4vw, 40px);
+      line-height: 1.35;
+      color: rgba(249,242,223,0.94);
+      text-shadow: 0 4px 18px rgba(0,0,0,0.24);
+    }
+
+    @keyframes specialFloat {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .special-name {
+        font-size: clamp(54px, 16vw, 120px);
+      }
+
+      .special-message {
+        font-size: clamp(16px, 5vw, 24px);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1077,6 +1150,15 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <div id="specialOverlay" class="special-overlay">
+    <div class="special-inner">
+      <div id="specialName" class="special-name">Andrei</div>
+      <div id="specialMessage" class="special-message">
+        Multumim pentru comanda!
+      </div>
+    </div>
   </div>
 
   <div id="wifiQr" class="wifi-qr">
@@ -1137,39 +1219,17 @@
 
     const adLayouts = ["cinematic", "centered", "card"];
 
-    const ads = [
-      
-      {
-        type: "image",
-        title: "Titlu\nSubtitlu",
-        desc: "Descriere",
-        image: "photo1.jpg"
-      },
-      {
-        type: "image",
-        title: "Titlu\nSubtitlu",
-        desc: "Descriere",
-        image: "photo1.jpg"
-      },
-      {
-        type: "image",
-        title: "Titlu\nSubtitlu",
-        desc: "Descriere",
-        image: "photo1.jpg"
-      },
-      {
-        type: "video",
-        title: "Titlu\nSubtitlu",
-        desc: "Descriere",
-        video: "video.mp4"
-      }
-     
-    ];
+    let ads = [];
+    let adsEnabled = true;
 
     const homeLayer = document.getElementById("homeLayer");
     const wifiQr = document.getElementById("wifiQr");
     const radioPlayer = document.getElementById("radioPlayer");
     radioPlayer.src = STREAM_URL;
+
+    const specialOverlay = document.getElementById("specialOverlay");
+    const specialName = document.getElementById("specialName");
+    const specialMessage = document.getElementById("specialMessage");
 
     const adOverlay = document.getElementById("adOverlay");
     const adSlides = document.getElementById("adSlides");
@@ -1312,6 +1372,7 @@
 
         function triggerNextLogoEffect() {
           if (logoEffectRunning) return;
+          if (specialModeActive) return;
 
           const adVisible = adOverlay && adOverlay.classList.contains("show");
           if (adVisible) return;
@@ -1531,6 +1592,68 @@
         marqueeCurrentSpeed = marqueeBaseSpeed + energy * 26;
       }
 
+    let specialModeActive = false;
+
+    function showSpecialOverlay(data) {
+      if (!specialOverlay) return;
+
+      specialName.textContent = data.name || "";
+      specialMessage.textContent = data.message || "";
+
+      specialOverlay.classList.add("show");
+      homeLayer.classList.add("dimmed");
+      wifiQr.classList.add("dimmed");
+
+      specialModeActive = true;
+    }
+
+    function hideSpecialOverlay() {
+      if (!specialOverlay) return;
+
+      specialOverlay.classList.remove("show");
+      homeLayer.classList.remove("dimmed");
+      wifiQr.classList.remove("dimmed");
+
+      specialModeActive = false;
+    }
+
+    async function checkSpecialOverlay() {
+      try {
+        const response = await fetch("special.json?ts=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        if (data.enabled && data.name && data.message) {
+          showSpecialOverlay(data);
+        } else {
+          hideSpecialOverlay();
+        }
+      } catch (error) {
+        console.log("special.json indisponibil:", error);
+      }
+    }
+
+      async function loadAdsFromJson() {
+      try {
+        const response = await fetch("ads.json?ts=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        adsEnabled = !!data.enabled;
+        ads = Array.isArray(data.items) ? data.items : [];
+      } catch (error) {
+        console.log("ads.json indisponibil:", error);
+      }
+    }
+
     function startBurnInProtection() {
       const positions = [
         { x: 0, y: 0 },
@@ -1699,6 +1822,10 @@
     }
 
     function showAdsOverlay() {
+      if (!adsEnabled) return;
+      if (!ads || !ads.length) return;
+      if (specialModeActive) return;
+
       buildSlides();
       homeLayer.classList.add("dimmed");
       wifiQr.classList.add("dimmed");
@@ -1775,6 +1902,13 @@
     requestAnimationFrame(animateMarquee);
 
     startLogoEffectsRotation();
+
+    loadAdsFromJson();
+    setInterval(loadAdsFromJson, 5000);
+
+    checkSpecialOverlay();
+    setInterval(checkSpecialOverlay, 3000);
+
     //teste
     // setTimeout(showAdsOverlay, 3000);
     // setTimeout(() => runLogoEffect("typewriter"), 2000);
