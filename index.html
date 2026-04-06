@@ -1002,13 +1002,6 @@
         overflow: hidden;
       }
       
-      .np-text {
-        display: inline-block;
-        white-space: nowrap;
-        will-change: transform;
-        transform: translateX(0);
-      }
-      
       .np-wrap::before,
       .np-wrap::after {
         content: "";
@@ -1255,13 +1248,6 @@
 
     .tagline.reveal .tagline-letter {
       animation: taglineLetterReveal 0.45s ease forwards;
-    }
-
-    @keyframes taglineLetterReveal {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .tagline {
@@ -1927,9 +1913,12 @@ if (radioPlayer) {
             console.log("Special audio blocked:", e);
           }
         } else {
-          specialAudio.pause();
-          specialAudio.currentTime = 0;
-        }
+  specialAudio.pause();
+  specialAudio.currentTime = 0;
+  specialAudio.removeAttribute("src");
+  specialAudio.setAttribute("data-current-src", "");
+  specialAudio.load();
+}
       }
 
       specialOverlay.classList.add("show");
