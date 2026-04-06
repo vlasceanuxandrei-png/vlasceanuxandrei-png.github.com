@@ -1187,6 +1187,20 @@
       .home-layer.dimmed .site-footer {
         opacity: 0;
       }
+
+    .tagline {
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .tagline.hidden {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .tagline.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -1207,7 +1221,7 @@
           <div class="logo-glow"></div>
          <div class="now-playing"><div class="np-wrap"><div id='sonic_title'></div></div></div>
           <div id="brandLogo" class="brand-logo">Velmora</div>
-          <div id="brandSub" class="brand-sub">coffee and stories</div>
+          <div id="brandSub" class="brand-sub"><div id="tagline" class="tagline">coffee and stories</div></div>
         </div>
       </div>
     </main>
@@ -1822,6 +1836,69 @@
       }
     }
 
+      const taglineEl = document.getElementById("tagline");
+
+      const taglineDefault = "Coffee & Stories";
+
+      const taglineMessages = [
+        "Take your coffee break",
+        "Slow moments matter",
+        "Pause. Sip. Enjoy.",
+        "Warm coffee. Good stories.",
+        "Stay awhile"
+      ];
+
+      let lastTaglineIndex = -1;
+      let taglineTimer = null;
+
+      function getRandomTagline() {
+        let index;
+        do {
+          index = Math.floor(Math.random() * taglineMessages.length);
+        } while (index === lastTaglineIndex);
+
+        lastTaglineIndex = index;
+        return taglineMessages[index];
+      }
+
+      function showTemporaryTagline(text) {
+        if (specialModeActive) return;
+        if (adOverlay && adOverlay.classList.contains("show")) return;
+        
+        if (!taglineEl) return;
+
+        taglineEl.classList.add("hidden");
+
+        setTimeout(() => {
+          taglineEl.textContent = text;
+          taglineEl.classList.remove("hidden");
+          taglineEl.classList.add("show");
+        }, 400);
+
+
+        setTimeout(() => {
+          taglineEl.classList.add("hidden");
+
+          setTimeout(() => {
+            taglineEl.textContent = taglineDefault;
+            taglineEl.classList.remove("hidden");
+          }, 400);
+
+        }, 8000); 
+      }
+
+      function startTaglineRotation() {
+        clearInterval(taglineTimer);
+
+        taglineTimer = setInterval(() => {
+          if (specialModeActive) return;
+
+          const randomText = getRandomTagline();
+          showTemporaryTagline(randomText);
+
+        }, 180000);
+      }
+
     function startBurnInProtection() {
       const positions = [
         { x: 0, y: 0 },
@@ -2078,6 +2155,8 @@
 
     checkSpecialOverlay();
     setInterval(checkSpecialOverlay, 3000);
+
+    startTaglineRotation();
 
 
     //teste
