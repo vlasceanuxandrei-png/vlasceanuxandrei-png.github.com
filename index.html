@@ -1624,6 +1624,7 @@
       }
 
     let specialModeActive = false;
+    let specialAudioMode = false;
 
     async function showSpecialOverlay(data) {
       if (!specialOverlay) return;
@@ -1631,7 +1632,9 @@
       specialName.textContent = data.name || "";
       specialMessage.textContent = data.message || "";
 
-      // video special
+      specialAudioMode = true;
+
+ 
       if (specialVideo) {
         if (data.video) {
           const currentVideoSrc = specialVideo.getAttribute("data-current-src") || "";
@@ -1684,7 +1687,7 @@
       specialOverlay.classList.remove("show");
       homeLayer.classList.remove("dimmed");
       wifiQr.classList.remove("dimmed");
- 
+
       if (specialAudio) {
         specialAudio.pause();
         specialAudio.currentTime = 0;
@@ -1695,8 +1698,8 @@
       }
 
       specialModeActive = false;
+      specialAudioMode = false;
 
-      // repornește radioul
       if (radioPlayer) {
         try {
           await radioPlayer.play();
@@ -1773,6 +1776,8 @@
     startBurnInProtection();
 
     setInterval(() => {
+      if (specialAudioMode) return;
+
       if (radioPlayer.paused) {
         radioPlayer.play().catch(() => {});
       }
@@ -1783,7 +1788,7 @@
         try { await audioCtx.resume(); } catch (e) {}
       }
 
-      if (radioPlayer.paused) {
+      if (!specialAudioMode && radioPlayer.paused) {
         radioPlayer.play().catch(() => {});
       }
 
