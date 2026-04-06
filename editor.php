@@ -50,7 +50,10 @@ function readSpecialJson(string $file): array
     if (!file_exists($file)) {
         return [
             "enabled" => false,
+            "type" => "classic",
             "name" => "",
+            "from" => "",
+            "to" => "",
             "message" => "",
             "duration" => 10,
             "video" => "",
@@ -64,7 +67,10 @@ function readSpecialJson(string $file): array
     if (!is_array($data)) {
         return [
             "enabled" => false,
+            "type" => "classic",
             "name" => "",
+            "from" => "",
+            "to" => "",
             "message" => "",
             "duration" => 10,
             "video" => "",
@@ -73,12 +79,15 @@ function readSpecialJson(string $file): array
     }
 
     return array_merge([
-        "enabled" => false,
-        "name" => "",
-        "message" => "",
-        "duration" => 10,
-        "video" => "",
-        "audio" => ""
+            "enabled" => false,
+            "type" => "classic",
+            "name" => "",
+            "from" => "",
+            "to" => "",
+            "message" => "",
+            "duration" => 10,
+            "video" => "",
+            "audio" => ""
     ], $data);
 }
 
@@ -97,12 +106,15 @@ $current = readSpecialJson($file);
 
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_action'])) {
     $newData = [
-        "enabled"  => isset($_POST['enabled']),
-        "name"     => trim($_POST['name'] ?? ''),
-        "message"  => trim($_POST['message'] ?? ''),
-        "duration" => max(0, (int)($_POST['duration'] ?? 10)),
-        "video"    => trim($_POST['video'] ?? ''),
-        "audio"    => trim($_POST['audio'] ?? '')
+            "enabled"  => isset($_POST['enabled']),
+            "type"     => $_POST['type'] ?? 'classic',
+            "name"     => trim($_POST['name'] ?? ''),
+            "from"     => trim($_POST['from'] ?? ''),
+            "to"       => trim($_POST['to'] ?? ''),
+            "message"  => trim($_POST['message'] ?? ''),
+            "duration" => max(0, (int)($_POST['duration'] ?? 10)),
+            "video"    => trim($_POST['video'] ?? ''),
+            "audio"    => trim($_POST['audio'] ?? '')
     ];
 
     if (writeSpecialJson($file, $newData)) {
@@ -115,12 +127,15 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_a
 
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_action'])) {
     $resetData = [
-        "enabled"  => false,
-        "name"     => "",
-        "message"  => "",
-        "duration" => 0,
-        "video"    => "",
-        "audio"    => ""
+            "enabled"  => false,
+            "type"     => "classic",
+            "name"     => "",
+            "from"     => "",
+            "to"       => "",
+            "message"  => "",
+            "duration" => 0,
+            "video"    => "",
+            "audio"    => ""
     ];
 
     if (writeSpecialJson($file, $resetData)) {
@@ -399,6 +414,46 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
         padding: 18px;
       }
     }
+
+    .type-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .type-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .type-pill input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .type-pill span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 110px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--white-soft);
+      transition: all 0.25s ease;
+      font-weight: 600;
+    }
+
+    .type-pill input:checked + span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: var(--white);
+      border-color: rgba(249,242,223,0.18);
+      box-shadow: 0 10px 30px rgba(70,33,33,0.30);
+    }
   </style>
 </head>
 <body>
@@ -453,13 +508,32 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
                 <input type="checkbox" name="enabled" <?= !empty($current['enabled']) ? 'checked' : '' ?>>
                 Activare special overlay
               </label>
+
+              <label>Tip mesaj</label>
+              <div class="type-pills">
+                <label class="type-pill">
+                  <input type="radio" name="type" value="classic" <?= (($current['type'] ?? 'classic') === 'classic') ? 'checked' : '' ?>>
+                  <span>Clasic</span>
+                </label>
+
+                <label class="type-pill">
+                  <input type="radio" name="type" value="dedication" <?= (($current['type'] ?? '') === 'dedication') ? 'checked' : '' ?>>
+                  <span>De la / Pentru</span>
+                </label>
             </div>
 
             <div class="field">
               <label>Nume</label>
               <input type="text" name="name" value="<?= htmlspecialchars($current['name'] ?? '') ?>" placeholder="Andrei">
             </div>
-
+            <div class="field">
+              <label>De la</label>
+              <input type="text" name="from" value="<?= htmlspecialchars($current['from'] ?? '') ?>" placeholder="Andrei">
+            </div>
+            <div class="field">
+              <label>Pentru</label>
+              <input type="text" name="to" value="<?= htmlspecialchars($current['to'] ?? '') ?>" placeholder="Maria">
+            </div>
             <div class="field">
               <label>Durată (secunde)</label>
               <input type="number" name="duration" min="0" value="<?= htmlspecialchars((string)($current['duration'] ?? 10)) ?>">
@@ -472,14 +546,23 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
 
             <div class="field full">
               <label>Video special</label>
-              <input type="text" name="video" value="<?= htmlspecialchars($current['video'] ?? '') ?>" placeholder="videos/special-bg.mp4">
+              <select name="video" class="admin-select">
+                <option value="" <?= (($current['video'] ?? '') === '') ? 'selected' : '' ?>>Fără video</option>
+                <option value="videos/special-bg.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg.mp4') ? 'selected' : '' ?>>Special Background 1</option>
+                <option value="videos/special-bg-2.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg-2.mp4') ? 'selected' : '' ?>>Special Background 2</option>
+                <option value="videos/special-bg-3.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg-3.mp4') ? 'selected' : '' ?>>Special Background 3</option>
+              </select>
             </div>
 
             <div class="field full">
               <label>Audio special</label>
-              <input type="text" name="audio" value="<?= htmlspecialchars($current['audio'] ?? '') ?>" placeholder="audio/special.mp3">
+              <select name="audio" class="admin-select">
+                <option value="" <?= (($current['audio'] ?? '') === '') ? 'selected' : '' ?>>Fără audio</option>
+                <option value="audio/special.mp3" <?= (($current['audio'] ?? '') === 'audio/special.mp3') ? 'selected' : '' ?>>Special Audio 1</option>
+                <option value="audio/special-2.mp3" <?= (($current['audio'] ?? '') === 'audio/special-2.mp3') ? 'selected' : '' ?>>Special Audio 2</option>
+                <option value="audio/special-3.mp3" <?= (($current['audio'] ?? '') === 'audio/special-3.mp3') ? 'selected' : '' ?>>Special Audio 3</option>
+              </select>
             </div>
-          </div>
 
           <div class="actions">
             <button type="submit" name="save_action" value="1" class="btn-primary">Salvează</button>

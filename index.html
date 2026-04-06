@@ -1109,48 +1109,74 @@
       linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.62));
   }
 
-  .special-inner {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    max-width: 1100px;
-    transform: translateY(18px) scale(0.98);
-    transition: transform 0.7s ease;
-  }
+    .special-inner {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      max-width: 1100px;
+      transform: translateY(18px) scale(0.98);
+      transition: transform 0.7s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
 
     .special-overlay.show .special-inner {
       transform: translateY(0) scale(1);
     }
 
+    .special-kicker {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(14px, 1.4vw, 22px);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(249,242,223,0.72);
+      text-shadow: 0 4px 14px rgba(0,0,0,0.24);
+      margin-bottom: 4px;
+    }
+
     .special-name {
       font-family: 'Amarante', serif;
-      font-size: clamp(72px, 12vw, 220px);
+      font-size: clamp(76px, 12vw, 220px);
       line-height: 0.9;
       color: var(--white);
       text-shadow:
         0 8px 30px rgba(0,0,0,0.30),
         0 0 28px rgba(249,242,223,0.10),
         0 0 48px rgba(70,33,33,0.24);
-      margin-bottom: 14px;
+      margin-bottom: 2px;
       animation: specialFloat 4s ease-in-out infinite;
     }
 
     .special-message {
-      font-family: 'Amarante', serif;
-      font-size: clamp(22px, 2.4vw, 40px);
-      line-height: 1.35;
-      color: rgba(249,242,223,0.94);
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(18px, 2vw, 30px);
+      line-height: 1.45;
+      color: rgba(249,242,223,0.88);
       text-shadow: 0 4px 18px rgba(0,0,0,0.24);
+      max-width: 880px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
     }
 
-    @keyframes specialFloat {
-      0%, 100% {
-        transform: translateY(0px);
+    @media (max-width: 900px) {
+      .special-kicker {
+        font-size: clamp(12px, 3vw, 16px);
+        letter-spacing: 0.16em;
       }
-      50% {
-        transform: translateY(-4px);
+
+      .special-name {
+        font-size: clamp(54px, 16vw, 120px);
+      }
+
+      .special-message {
+        font-size: clamp(15px, 4.6vw, 22px);
       }
     }
+    
+
 
     .site-footer {
       position: fixed;
@@ -1327,6 +1353,23 @@
         transform: translateY(0);
       }
     }
+  
+    .special-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .special-meta-line {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(14px, 1.4vw, 22px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(249,242,223,0.76);
+      text-shadow: 0 4px 14px rgba(0,0,0,0.24);
+    }
   </style>
 </head>
 <body>
@@ -1364,9 +1407,15 @@
     <div class="special-video-overlay"></div>
 
     <div class="special-inner">
+      <div id="specialMeta" class="special-meta" style="display:none;">
+        <div id="specialFrom" class="special-meta-line"></div>
+        <div id="specialTo" class="special-meta-line"></div>
+      </div>
+
       <div id="specialName" class="special-name">Andrei</div>
+
       <div id="specialMessage" class="special-message">
-        Multumim pentru comanda!
+        Mulțumim pentru comandă. Enjoy your coffee.
       </div>
     </div>
 
@@ -1440,6 +1489,9 @@
     radioPlayer.src = STREAM_URL;
 
     const specialOverlay = document.getElementById("specialOverlay");
+    const specialMeta = document.getElementById("specialMeta");
+    const specialFrom = document.getElementById("specialFrom");
+    const specialTo = document.getElementById("specialTo");
     const specialName = document.getElementById("specialName");
     const specialMessage = document.getElementById("specialMessage");
     const specialVideo = document.getElementById("specialVideo");
@@ -1814,8 +1866,21 @@
     async function showSpecialOverlay(data) {
       if (!specialOverlay) return;
 
+    const specialType = data.type || "classic";
+
+    if (specialType === "dedication") {
+      specialMeta.style.display = "flex";
+      specialFrom.textContent = `De la, ${data.from || ""}`;
+      specialTo.textContent = `Pentru, ${data.to || ""}`;
+      specialName.textContent = "";
+    } else {
+      specialMeta.style.display = "none";
+      specialFrom.textContent = "";
+      specialTo.textContent = "";
       specialName.textContent = data.name || "";
-      specialMessage.textContent = data.message || "";
+    }
+
+    specialMessage.textContent = data.message || "";
 
       specialAudioMode = true;
 
@@ -1919,7 +1984,10 @@
 
           const signature = JSON.stringify({
             enabled: !!data.enabled,
+            type: data.type || "classic",
             name: data.name || "",
+            from: data.from || "",
+            to: data.to || "",
             message: data.message || "",
             duration: data.duration || 0,
             video: data.video || "",
