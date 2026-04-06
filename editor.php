@@ -5,7 +5,7 @@ $file = __DIR__ . '/special.json';
 
 /*
 |--------------------------------------------------------------------------
-| CONFIG LOGIN
+| LOGIN CONFIG
 |--------------------------------------------------------------------------
 */
 $EDITOR_USER = 'velmora';
@@ -13,11 +13,61 @@ $EDITOR_PASS = 'cafenea123';
 
 /*
 |--------------------------------------------------------------------------
+| HELPERS
+|--------------------------------------------------------------------------
+*/
+function getDefaultSpecialData(): array
+{
+    return [
+        "enabled"  => false,
+        "type"     => "classic",
+        "name"     => "",
+        "from"     => "",
+        "to"       => "",
+        "message"  => "",
+        "duration" => 10,
+        "video"    => "",
+        "audio"    => ""
+    ];
+}
+
+function readSpecialJson(string $file): array
+{
+    $defaults = getDefaultSpecialData();
+
+    if (!file_exists($file)) {
+        return $defaults;
+    }
+
+    $raw = file_get_contents($file);
+    $data = json_decode($raw, true);
+
+    if (!is_array($data)) {
+        return $defaults;
+    }
+
+    return array_merge($defaults, $data);
+}
+
+function writeSpecialJson(string $file, array $data): bool
+{
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    return file_put_contents($file, $json) !== false;
+}
+
+function h(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+/*
+|--------------------------------------------------------------------------
 | LOGIN / LOGOUT
 |--------------------------------------------------------------------------
 */
 $loginError = '';
-$success = '';
+$flashMessage = '';
+$flashType = 'ok';
 
 if (isset($_GET['logout'])) {
     session_destroy();
@@ -42,63 +92,6 @@ $isLoggedIn = !empty($_SESSION['editor_logged_in']);
 
 /*
 |--------------------------------------------------------------------------
-| HELPERS
-|--------------------------------------------------------------------------
-*/
-function readSpecialJson(string $file): array
-{
-    if (!file_exists($file)) {
-        return [
-            "enabled" => false,
-            "type" => "classic",
-            "name" => "",
-            "from" => "",
-            "to" => "",
-            "message" => "",
-            "duration" => 10,
-            "video" => "",
-            "audio" => ""
-        ];
-    }
-
-    $content = file_get_contents($file);
-    $data = json_decode($content, true);
-
-    if (!is_array($data)) {
-        return [
-            "enabled" => false,
-            "type" => "classic",
-            "name" => "",
-            "from" => "",
-            "to" => "",
-            "message" => "",
-            "duration" => 10,
-            "video" => "",
-            "audio" => ""
-        ];
-    }
-
-    return array_merge([
-            "enabled" => false,
-            "type" => "classic",
-            "name" => "",
-            "from" => "",
-            "to" => "",
-            "message" => "",
-            "duration" => 10,
-            "video" => "",
-            "audio" => ""
-    ], $data);
-}
-
-function writeSpecialJson(string $file, array $data): bool
-{
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    return file_put_contents($file, $json) !== false;
-}
-
-/*
-|--------------------------------------------------------------------------
 | SAVE / RESET
 |--------------------------------------------------------------------------
 */
@@ -106,45 +99,50 @@ $current = readSpecialJson($file);
 
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_action'])) {
     $newData = [
-            "enabled"  => isset($_POST['enabled']),
-            "type"     => $_POST['type'] ?? 'classic',
-            "name"     => trim($_POST['name'] ?? ''),
-            "from"     => trim($_POST['from'] ?? ''),
-            "to"       => trim($_POST['to'] ?? ''),
-            "message"  => trim($_POST['message'] ?? ''),
-            "duration" => max(0, (int)($_POST['duration'] ?? 10)),
-            "video"    => trim($_POST['video'] ?? ''),
-            "audio"    => trim($_POST['audio'] ?? '')
+        "enabled"  => isset($_POST['enabled']),
+        "type"     => ($_POST['type'] ?? 'classic') === 'dedication' ? 'dedication' : 'classic',
+        "name"     => trim($_POST['name'] ?? ''),
+        "from"     => trim($_POST['from'] ?? ''),
+        "to"       => trim($_POST['to'] ?? ''),
+        "message"  => trim($_POST['message'] ?? ''),
+        "duration" => max(0, (int)($_POST['duration'] ?? 10)),
+        "video"    => trim($_POST['video'] ?? ''),
+        "audio"    => trim($_POST['audio'] ?? '')
     ];
 
     if (writeSpecialJson($file, $newData)) {
-        $success = 'Salvat cu succes.';
         $current = $newData;
+        $flashMessage = 'Modificările au fost salvate.';
+        $flashType = 'ok';
     } else {
-        $success = 'Nu am putut salva fișierul special.json.';
+        $flashMessage = 'Nu am putut salva fișierul special.json.';
+        $flashType = 'err';
     }
 }
 
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_action'])) {
-    $resetData = [
-            "enabled"  => false,
-            "type"     => "classic",
-            "name"     => "",
-            "from"     => "",
-            "to"       => "",
-            "message"  => "",
-            "duration" => 0,
-            "video"    => "",
-            "audio"    => ""
-    ];
+    $resetData = getDefaultSpecialData();
 
     if (writeSpecialJson($file, $resetData)) {
-        $success = 'special.json a fost resetat.';
         $current = $resetData;
+        $flashMessage = 'special.json a fost resetat.';
+        $flashType = 'ok';
     } else {
-        $success = 'Nu am putut reseta fișierul special.json.';
+        $flashMessage = 'Nu am putut reseta fișierul special.json.';
+        $flashType = 'err';
     }
 }
+
+$videoOptions = [
+    "" => "Fără video",
+    "videos/special.mp4" => "Artificii",
+];
+
+$audioOptions = [
+    "" => "Fără audio",
+    "audio/special_audio.mp3" => "Champions",
+    "audio/special_audio2.mp3" => "Prezidentiala",
+];
 ?>
 <!DOCTYPE html>
 <html lang="ro">
@@ -157,19 +155,23 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
   <link href="https://fonts.googleapis.com/css2?family=Amarante&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050505;
-      --card: rgba(12, 8, 8, 0.88);
-      --card-2: rgba(20, 12, 12, 0.78);
+      --bg: #060606;
+      --card: rgba(14, 10, 10, 0.9);
+      --card-2: rgba(20, 14, 14, 0.78);
       --white: #F9F2DF;
-      --white-soft: rgba(249, 242, 223, 0.75);
-      --white-mid: rgba(249, 242, 223, 0.56);
+      --white-soft: rgba(249,242,223,0.78);
+      --white-mid: rgba(249,242,223,0.58);
       --accent: #462121;
       --accent-2: #6b3434;
-      --border: rgba(249, 242, 223, 0.12);
-      --ok: #7fd6a6;
-      --danger: #d58d8d;
-      --shadow: 0 25px 80px rgba(0, 0, 0, 0.42);
-      --radius: 26px;
+      --border: rgba(249,242,223,0.12);
+      --ok: #2ea866;
+      --ok-soft: rgba(46,168,102,0.18);
+      --danger: #c34646;
+      --danger-soft: rgba(195,70,70,0.18);
+      --shadow: 0 24px 80px rgba(0,0,0,0.42);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
     }
 
     * {
@@ -180,39 +182,54 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
       margin: 0;
       min-height: 100%;
       background:
-        radial-gradient(circle at 20% 20%, rgba(70,33,33,0.20), transparent 24%),
-        radial-gradient(circle at 80% 22%, rgba(249,242,223,0.04), transparent 20%),
-        linear-gradient(180deg, #080808, #111, #080808);
+        radial-gradient(circle at 15% 20%, rgba(70,33,33,0.22), transparent 24%),
+        radial-gradient(circle at 82% 20%, rgba(249,242,223,0.05), transparent 18%),
+        linear-gradient(180deg, #080808, #111, #090909);
       color: var(--white);
       font-family: 'Inter', sans-serif;
     }
 
     body {
-      padding: 24px;
+      padding: 18px;
     }
 
-    .shell {
+    .page {
       max-width: 980px;
       margin: 0 auto;
     }
 
-    .topbar {
+    .login-wrap {
+      min-height: calc(100vh - 36px);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
+      justify-content: center;
     }
 
-    .brand {
+    .login-card,
+    .editor-card {
+      background: linear-gradient(145deg, var(--card), var(--card-2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+    }
+
+    .brand-head {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      margin-bottom: 18px;
     }
 
     .brand-title {
       font-family: 'Amarante', serif;
-      font-size: clamp(34px, 5vw, 56px);
+      font-size: clamp(34px, 6vw, 56px);
       line-height: 1;
       letter-spacing: 0.01em;
     }
@@ -222,43 +239,33 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
       font-size: 14px;
     }
 
-    .logout {
-      text-decoration: none;
-      color: var(--white);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
+    .status {
+      margin-bottom: 14px;
+      padding: 12px 14px;
       border-radius: 14px;
-      padding: 10px 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 14px;
     }
 
-    .panel {
-      background: linear-gradient(145deg, var(--card), var(--card-2));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-      overflow: hidden;
+    .status.ok {
+      background: var(--ok-soft);
+      border: 1px solid rgba(46,168,102,0.25);
+      color: #8ce0b2;
     }
 
-    .panel-inner {
-      padding: 24px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
+    .status.err {
+      background: var(--danger-soft);
+      border: 1px solid rgba(195,70,70,0.25);
+      color: #f1aaaa;
     }
 
     .field {
       margin-bottom: 16px;
     }
 
-    .field.full {
-      grid-column: 1 / -1;
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
 
     label {
@@ -266,19 +273,19 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
       margin-bottom: 8px;
       font-size: 13px;
       color: var(--white-soft);
-      letter-spacing: 0.02em;
     }
 
     input[type="text"],
     input[type="password"],
     input[type="number"],
-    textarea {
+    textarea,
+    select {
       width: 100%;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.05);
       color: var(--white);
-      border-radius: 16px;
-      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      padding: 14px 15px;
       outline: none;
       font: inherit;
     }
@@ -289,46 +296,30 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
     }
 
     input:focus,
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color: rgba(249,242,223,0.22);
       box-shadow: 0 0 0 3px rgba(70,33,33,0.18);
     }
 
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-top: 8px;
-      color: var(--white);
-      font-size: 15px;
-    }
-
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
-    button {
+    .btn {
       border: 0;
       border-radius: 16px;
       padding: 13px 18px;
       cursor: pointer;
       font: inherit;
-      font-weight: 600;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
     }
 
     .btn-primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       color: var(--white);
-      box-shadow: 0 10px 30px rgba(70,33,33,0.35);
+      box-shadow: 0 12px 30px rgba(70,33,33,0.35);
     }
 
     .btn-secondary {
@@ -337,82 +328,48 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
       border: 1px solid var(--border);
     }
 
-    .status {
-      margin-bottom: 18px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-size: 14px;
+    .btn-block {
+      width: 100%;
     }
 
-    .status.ok {
-      background: rgba(127,214,166,0.10);
-      border: 1px solid rgba(127,214,166,0.28);
-      color: var(--ok);
-    }
-
-    .status.err {
-      background: rgba(213,141,141,0.10);
-      border: 1px solid rgba(213,141,141,0.28);
-      color: var(--danger);
-    }
-
-    .hint {
-      margin-top: 18px;
-      font-size: 13px;
-      color: var(--white-mid);
-      line-height: 1.55;
-    }
-
-    .login-wrap {
-      min-height: calc(100vh - 48px);
+    .editor-topbar {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
-    .login-card {
-      width: 100%;
-      max-width: 460px;
-      background: linear-gradient(145deg, var(--card), var(--card-2));
+    .logout-link {
+      text-decoration: none;
+      color: var(--white);
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-      padding: 26px;
+      border-radius: 14px;
+      padding: 10px 14px;
+      white-space: nowrap;
     }
 
-    .login-title {
-      font-family: 'Amarante', serif;
-      font-size: 42px;
-      text-align: center;
-      margin-bottom: 6px;
+    .editor-card {
+      overflow: hidden;
     }
 
-    .login-sub {
-      text-align: center;
-      color: var(--white-soft);
-      font-size: 14px;
-      margin-bottom: 22px;
+    .editor-body {
+      padding: 20px;
     }
 
-    @media (max-width: 820px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .section {
+      margin-bottom: 20px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(249,242,223,0.08);
+    }
 
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      body {
-        padding: 14px;
-      }
-
-      .panel-inner,
-      .login-card {
-        padding: 18px;
-      }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
     }
 
     .type-pills {
@@ -438,141 +395,342 @@ if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 110px;
+      min-width: 130px;
       padding: 12px 16px;
       border-radius: 14px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.05);
       color: var(--white-soft);
       transition: all 0.25s ease;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .type-pill input:checked + span {
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       color: var(--white);
       border-color: rgba(249,242,223,0.18);
-      box-shadow: 0 10px 30px rgba(70,33,33,0.30);
+      box-shadow: 0 10px 26px rgba(70,33,33,0.30);
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .switch-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .switch-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .switch-desc {
+      font-size: 13px;
+      color: var(--white-mid);
+    }
+
+    .toggle {
+      position: relative;
+      width: 86px;
+      height: 44px;
+      flex: 0 0 auto;
+    }
+
+    .toggle input {
+      display: none;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #7d1d1d, #c34646);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      transition: all 0.25s ease;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      left: 5px;
+      top: 5px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.24);
+      transition: transform 0.25s ease;
+    }
+
+    .toggle-slider::after {
+      content: "OFF";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.9);
+      transition: all 0.25s ease;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #1f8f52, #33c172);
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(42px);
+    }
+
+    .toggle input:checked + .toggle-slider::after {
+      content: "ON";
+      right: auto;
+      left: 14px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: var(--white-mid);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 820px) {
+      body {
+        padding: 10px;
+      }
+
+      .login-wrap {
+        min-height: calc(100vh - 20px);
+      }
+
+      .login-card,
+      .editor-body {
+        padding: 16px;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .logout-link {
+        width: 100%;
+        text-align: center;
+      }
+
+      .switch-row {
+        align-items: flex-start;
+      }
+
+      .toggle {
+        width: 82px;
+        height: 42px;
+      }
+
+      .toggle-slider::before {
+        width: 32px;
+        height: 32px;
+      }
+
+      .toggle input:checked + .toggle-slider::before {
+        transform: translateX(40px);
+      }
+
+      .type-pill span {
+        min-width: 100%;
+      }
+
+      .type-pills {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 
 <?php if (!$isLoggedIn): ?>
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="login-title">Velmora</div>
-      <div class="login-sub">Special Editor Access</div>
-
-      <?php if ($loginError): ?>
-        <div class="status err"><?= htmlspecialchars($loginError) ?></div>
-      <?php endif; ?>
-
-      <form method="post">
-        <input type="hidden" name="login_action" value="1">
-
-        <div class="field">
-          <label>User</label>
-          <input type="text" name="username" autocomplete="username" required>
+  <div class="page">
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="brand-head">
+          <div class="brand-title">Velmora</div>
+          <div class="brand-sub">Special Overlay Editor</div>
         </div>
 
-        <div class="field">
-          <label>Parolă</label>
-          <input type="password" name="password" autocomplete="current-password" required>
-        </div>
-
-        <button type="submit" class="btn-primary" style="width:100%;">Autentificare</button>
-      </form>
-    </div>
-  </div>
-<?php else: ?>
-  <div class="shell">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-title">Velmora</div>
-       <!-- <div class="brand-sub">Editor special overlay.</div> -->
-      </div>
-      <a class="logout" href="?logout=1">Logout</a>
-    </div>
-
-    <div class="panel">
-      <div class="panel-inner">
-        <?php if ($success): ?>
-          <div class="status ok"><?= htmlspecialchars($success) ?></div>
+        <?php if ($loginError): ?>
+          <div class="status err"><?= h($loginError) ?></div>
         <?php endif; ?>
 
         <form method="post">
-          <div class="grid">
-            <div class="field full">
-              <label class="checkbox-row">
+          <input type="hidden" name="login_action" value="1">
+
+          <div class="field">
+            <label>User</label>
+            <input type="text" name="username" autocomplete="username" required>
+          </div>
+
+          <div class="field">
+            <label>Parolă</label>
+            <input type="password" name="password" autocomplete="current-password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Autentificare</button>
+        </form>
+      </div>
+    </div>
+  </div>
+<?php else: ?>
+  <div class="page">
+    <div class="editor-topbar">
+      <div class="brand-head" style="margin:0;">
+        <div class="brand-title">Velmora</div>
+        <div class="brand-sub">Editor pentru special.json</div>
+      </div>
+
+      <a href="?logout=1" class="logout-link">Logout</a>
+    </div>
+
+    <div class="editor-card">
+      <div class="editor-body">
+
+        <?php if ($flashMessage): ?>
+          <div class="status <?= $flashType === 'ok' ? 'ok' : 'err' ?>">
+            <?= h($flashMessage) ?>
+          </div>
+        <?php endif; ?>
+
+        <form method="post">
+          <div class="section">
+            <div class="switch-row">
+              <div class="switch-meta">
+                <div class="switch-title">Activare special overlay</div>
+                <div class="switch-desc">Pornește sau oprește mesajul special de pe ecran.</div>
+              </div>
+
+              <label class="toggle">
                 <input type="checkbox" name="enabled" <?= !empty($current['enabled']) ? 'checked' : '' ?>>
-                Activare special overlay
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Tip mesaj</div>
+
+            <div class="type-pills">
+              <label class="type-pill">
+                <input type="radio" name="type" value="classic" <?= (($current['type'] ?? 'classic') === 'classic') ? 'checked' : '' ?>>
+                <span>Clasic</span>
               </label>
 
-              <label>Tip mesaj</label>
-              <div class="type-pills">
-                <label class="type-pill">
-                  <input type="radio" name="type" value="classic" <?= (($current['type'] ?? 'classic') === 'classic') ? 'checked' : '' ?>>
-                  <span>Clasic</span>
-                </label>
+              <label class="type-pill">
+                <input type="radio" name="type" value="dedication" <?= (($current['type'] ?? '') === 'dedication') ? 'checked' : '' ?>>
+                <span>De la / Pentru</span>
+              </label>
+            </div>
+          </div>
 
-                <label class="type-pill">
-                  <input type="radio" name="type" value="dedication" <?= (($current['type'] ?? '') === 'dedication') ? 'checked' : '' ?>>
-                  <span>De la / Pentru</span>
-                </label>
+          <div class="section">
+            <div class="section-title">Conținut</div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Nume principal (pentru modul clasic)</label>
+                <input type="text" name="name" value="<?= h($current['name'] ?? '') ?>" placeholder="Andrei">
+              </div>
+
+              <div class="field">
+                <label>Durată (secunde)</label>
+                <input type="number" name="duration" min="0" value="<?= h((string)($current['duration'] ?? 10)) ?>">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>De la</label>
+                <input type="text" name="from" value="<?= h($current['from'] ?? '') ?>" placeholder="Andrei">
+              </div>
+
+              <div class="field">
+                <label>Pentru</label>
+                <input type="text" name="to" value="<?= h($current['to'] ?? '') ?>" placeholder="Maria">
+              </div>
             </div>
 
             <div class="field">
-              <label>Nume</label>
-              <input type="text" name="name" value="<?= htmlspecialchars($current['name'] ?? '') ?>" placeholder="Andrei">
+              <label>Text</label>
+              <textarea name="message" placeholder="Mulțumim pentru comandă. Enjoy your coffee."><?= h($current['message'] ?? '') ?></textarea>
             </div>
-            <div class="field">
-              <label>De la</label>
-              <input type="text" name="from" value="<?= htmlspecialchars($current['from'] ?? '') ?>" placeholder="Andrei">
-            </div>
-            <div class="field">
-              <label>Pentru</label>
-              <input type="text" name="to" value="<?= htmlspecialchars($current['to'] ?? '') ?>" placeholder="Maria">
-            </div>
-            <div class="field">
-              <label>Durată (secunde)</label>
-              <input type="number" name="duration" min="0" value="<?= htmlspecialchars((string)($current['duration'] ?? 10)) ?>">
-            </div>
+          </div>
 
-            <div class="field full">
-              <label>Mesaj</label>
-              <textarea name="message" placeholder="Mulțumim pentru comandă. Enjoy your coffee."><?= htmlspecialchars($current['message'] ?? '') ?></textarea>
-            </div>
+          <div class="section">
+            <div class="section-title">Media</div>
 
-            <div class="field full">
+            <div class="field">
               <label>Video special</label>
-              <select name="video" class="admin-select">
-                <option value="" <?= (($current['video'] ?? '') === '') ? 'selected' : '' ?>>Fără video</option>
-                <option value="videos/special-bg.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg.mp4') ? 'selected' : '' ?>>Special Background 1</option>
-                <option value="videos/special-bg-2.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg-2.mp4') ? 'selected' : '' ?>>Special Background 2</option>
-                <option value="videos/special-bg-3.mp4" <?= (($current['video'] ?? '') === 'videos/special-bg-3.mp4') ? 'selected' : '' ?>>Special Background 3</option>
+              <select name="video">
+                <?php foreach ($videoOptions as $value => $label): ?>
+                  <option value="<?= h($value) ?>" <?= (($current['video'] ?? '') === $value) ? 'selected' : '' ?>>
+                    <?= h($label) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
 
-            <div class="field full">
+            <div class="field">
               <label>Audio special</label>
-              <select name="audio" class="admin-select">
-                <option value="" <?= (($current['audio'] ?? '') === '') ? 'selected' : '' ?>>Fără audio</option>
-                <option value="audio/special.mp3" <?= (($current['audio'] ?? '') === 'audio/special.mp3') ? 'selected' : '' ?>>Special Audio 1</option>
-                <option value="audio/special-2.mp3" <?= (($current['audio'] ?? '') === 'audio/special-2.mp3') ? 'selected' : '' ?>>Special Audio 2</option>
-                <option value="audio/special-3.mp3" <?= (($current['audio'] ?? '') === 'audio/special-3.mp3') ? 'selected' : '' ?>>Special Audio 3</option>
+              <select name="audio">
+                <?php foreach ($audioOptions as $value => $label): ?>
+                  <option value="<?= h($value) ?>" <?= (($current['audio'] ?? '') === $value) ? 'selected' : '' ?>>
+                    <?= h($label) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
+          </div>
 
           <div class="actions">
-            <button type="submit" name="save_action" value="1" class="btn-primary">Salvează</button>
-            <button type="submit" name="reset_action" value="1" class="btn-secondary">Reset</button>
+            <button type="submit" name="save_action" value="1" class="btn btn-primary">Salvează</button>
+            <button type="submit" name="reset_action" value="1" class="btn btn-secondary">Reset</button>
+          </div>
+
+          <div class="hint">
+            Tipul implicit este <strong>Clasic</strong>.<br>
+            Pentru a adăuga mai multe opțiuni în dropdown, completezi în array-urile
+            <strong>$videoOptions</strong> și <strong>$audioOptions</strong> din partea de sus a fișierului.
           </div>
         </form>
 
-        <div class="hint">
-          Fisier editat: <strong>special.json</strong><br>
-        </div>
       </div>
     </div>
   </div>
