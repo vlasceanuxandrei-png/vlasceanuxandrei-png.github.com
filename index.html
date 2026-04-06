@@ -1963,6 +1963,89 @@ specialMessage.textContent = data.message || "";
       }
     }
 
+async function updateActiveSpecialOverlay(data) {
+  const specialType = data.type || "classic";
+
+  if (specialType === "dedication") {
+    specialMeta.style.display = "flex";
+    specialFrom.textContent = data.from ? `De la, ${data.from}` : "";
+    specialTo.textContent = data.to ? `Pentru, ${data.to}` : "";
+    specialName.style.display = "none";
+    specialName.textContent = "";
+  } else {
+    specialMeta.style.display = "none";
+    specialFrom.textContent = "";
+    specialTo.textContent = "";
+    specialName.style.display = "block";
+    specialName.textContent = data.name || "";
+  }
+
+  specialMessage.textContent = data.message || "";
+
+  // VIDEO
+  if (specialVideo) {
+    const newVideo = data.video || "";
+    const currentVideoSrc = specialVideo.getAttribute("data-current-src") || "";
+
+    if (currentVideoSrc !== newVideo) {
+      specialVideo.pause();
+
+      if (newVideo) {
+        specialVideo.src = newVideo;
+        specialVideo.setAttribute("data-current-src", newVideo);
+      } else {
+        specialVideo.removeAttribute("src");
+        specialVideo.setAttribute("data-current-src", "");
+      }
+
+      specialVideo.load();
+
+      if (newVideo) {
+        specialVideo.play().catch(() => {});
+      }
+    }
+  }
+
+  // AUDIO
+  if (specialAudio) {
+    const newAudio = data.audio || "";
+    const currentAudioSrc = specialAudio.getAttribute("data-current-src") || "";
+
+    if (currentAudioSrc !== newAudio) {
+      specialAudio.pause();
+      specialAudio.currentTime = 0;
+
+      if (newAudio) {
+        specialAudio.src = newAudio;
+        specialAudio.setAttribute("data-current-src", newAudio);
+      } else {
+        specialAudio.removeAttribute("src");
+        specialAudio.setAttribute("data-current-src", "");
+      }
+
+      specialAudio.load();
+
+      if (newAudio) {
+        try {
+          await specialAudio.play();
+        } catch (e) {
+          console.log("Special audio update blocked:", e);
+        }
+      }
+    }
+  }
+
+  // DURATION RESET
+  clearTimeout(specialHideTimer);
+  specialHideTimer = null;
+
+  if (data.duration && Number(data.duration) > 0) {
+    specialHideTimer = setTimeout(async () => {
+      await hideSpecialOverlay();
+    }, Number(data.duration) * 1000);
+  }
+}
+
       async function hideSpecialOverlay() {
         if (!specialOverlay) return;
 
@@ -1995,7 +2078,7 @@ specialMessage.textContent = data.message || "";
         }
       }
 
-      async function checkSpecialOverlay() {
+async function checkSpecialOverlay() {
   try {
     const response = await fetch("special.json?ts=" + Date.now(), {
       cache: "no-store"
@@ -2024,27 +2107,13 @@ specialMessage.textContent = data.message || "";
     if (data.enabled && (hasClassicContent || hasDedicationContent)) {
       if (!specialModeActive && lastSpecialSignature !== signature) {
         lastSpecialSignature = signature;
-        showSpecialOverlay(data);
+        await showSpecialOverlay(data);
       } else if (specialModeActive) {
-        if (specialType === "dedication") {
-          specialMeta.style.display = "flex";
-          specialFrom.textContent = `De la, ${data.from || ""}`;
-          specialTo.textContent = `Pentru, ${data.to || ""}`;
-          specialName.style.display = "none";
-          specialName.textContent = "";
-        } else {
-          specialMeta.style.display = "none";
-          specialFrom.textContent = "";
-          specialTo.textContent = "";
-          specialName.style.display = "block";
-          specialName.textContent = data.name || "";
-        }
-
-        specialMessage.textContent = data.message || "";
+        await updateActiveSpecialOverlay(data);
       }
     } else {
       if (specialModeActive) {
-        hideSpecialOverlay();
+        await hideSpecialOverlay();
       }
       lastSpecialSignature = "";
     }
