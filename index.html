@@ -878,10 +878,18 @@
         padding: 10px;
       }
 
+
+      .special-name {
+        font-size: clamp(54px, 16vw, 120px);
+      }
+
+      .special-message {
+        font-size: clamp(16px, 5vw, 24px);
+      }
+
+
       .site-footer {
-        font-size: 11px;
-        right: 14px;
-        bottom: 12px;
+       display: none !important;
       }
 
       .ad-shell {
@@ -1141,16 +1149,6 @@
       }
       50% {
         transform: translateY(-4px);
-      }
-    }
-
-    @media (max-width: 900px) {
-      .special-name {
-        font-size: clamp(54px, 16vw, 120px);
-      }
-
-      .special-message {
-        font-size: clamp(16px, 5vw, 24px);
       }
     }
 
