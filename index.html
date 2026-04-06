@@ -1139,24 +1139,24 @@
 
     .special-name {
       font-family: 'Amarante', serif;
-      font-size: clamp(76px, 12vw, 220px);
-      line-height: 0.9;
+      font-size: clamp(72px, 11vw, 200px);
+      line-height: 0.92;
       color: var(--white);
       text-shadow:
         0 8px 30px rgba(0,0,0,0.30),
         0 0 28px rgba(249,242,223,0.10),
         0 0 48px rgba(70,33,33,0.24);
-      margin-bottom: 2px;
+      margin-bottom: 6px;
       animation: specialFloat 4s ease-in-out infinite;
     }
 
     .special-message {
       font-family: 'Inter', sans-serif;
-      font-size: clamp(18px, 2vw, 30px);
-      line-height: 1.45;
-      color: rgba(249,242,223,0.88);
+      font-size: clamp(18px, 1.9vw, 28px);
+      line-height: 1.5;
+      color: rgba(249,242,223,0.90);
       text-shadow: 0 4px 18px rgba(0,0,0,0.24);
-      max-width: 880px;
+      max-width: 820px;
       font-weight: 500;
       letter-spacing: 0.01em;
     }
@@ -1356,18 +1356,30 @@
   
     .special-meta {
       display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .special-meta-card {
+      display: inline-flex;
       flex-direction: column;
-      gap: 6px;
-      margin-bottom: 8px;
+      gap: 8px;
+      padding: 16px 22px;
+      border-radius: 22px;
+      background: rgba(8,8,8,0.22);
+      border: 1px solid rgba(249,242,223,0.10);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.22);
     }
 
     .special-meta-line {
       font-family: 'Inter', sans-serif;
-      font-size: clamp(14px, 1.4vw, 22px);
+      font-size: clamp(15px, 1.5vw, 24px);
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(249,242,223,0.76);
+      color: rgba(249,242,223,0.82);
       text-shadow: 0 4px 14px rgba(0,0,0,0.24);
     }
   </style>
@@ -1408,14 +1420,16 @@
 
     <div class="special-inner">
       <div id="specialMeta" class="special-meta" style="display:none;">
-        <div id="specialFrom" class="special-meta-line"></div>
-        <div id="specialTo" class="special-meta-line"></div>
+        <div class="special-meta-card">
+          <div id="specialFrom" class="special-meta-line"></div>
+          <div id="specialTo" class="special-meta-line"></div>
+        </div>
       </div>
 
       <div id="specialName" class="special-name">Andrei</div>
 
       <div id="specialMessage" class="special-message">
-        Mulțumim pentru comandă. Enjoy your coffee.
+        Multumim pentru comanda!
       </div>
     </div>
 
@@ -1866,21 +1880,23 @@
     async function showSpecialOverlay(data) {
       if (!specialOverlay) return;
 
-    const specialType = data.type || "classic";
+      const specialType = data.type || "classic";
 
-    if (specialType === "dedication") {
-      specialMeta.style.display = "flex";
-      specialFrom.textContent = `De la, ${data.from || ""}`;
-      specialTo.textContent = `Pentru, ${data.to || ""}`;
-      specialName.textContent = "";
-    } else {
-      specialMeta.style.display = "none";
-      specialFrom.textContent = "";
-      specialTo.textContent = "";
-      specialName.textContent = data.name || "";
-    }
+      if (specialType === "dedication") {
+        specialMeta.style.display = "flex";
+        specialFrom.textContent = data.from ? `De la, ${data.from}` : "De la";
+        specialTo.textContent = data.to ? `Pentru, ${data.to}` : "Pentru";
+        specialName.style.display = "none";
+        specialName.textContent = "";
+      } else {
+        specialMeta.style.display = "none";
+        specialFrom.textContent = "";
+        specialTo.textContent = "";
+        specialName.style.display = "block";
+        specialName.textContent = data.name || "";
+      }
 
-    specialMessage.textContent = data.message || "";
+      specialMessage.textContent = data.message || "";
 
       specialAudioMode = true;
 

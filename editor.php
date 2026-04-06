@@ -98,17 +98,19 @@ $isLoggedIn = !empty($_SESSION['editor_logged_in']);
 $current = readSpecialJson($file);
 
 if ($isLoggedIn && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_action'])) {
-    $newData = [
-        "enabled"  => isset($_POST['enabled']),
-        "type"     => ($_POST['type'] ?? 'classic') === 'dedication' ? 'dedication' : 'classic',
-        "name"     => trim($_POST['name'] ?? ''),
-        "from"     => trim($_POST['from'] ?? ''),
-        "to"       => trim($_POST['to'] ?? ''),
-        "message"  => trim($_POST['message'] ?? ''),
-        "duration" => max(0, (int)($_POST['duration'] ?? 10)),
-        "video"    => trim($_POST['video'] ?? ''),
-        "audio"    => trim($_POST['audio'] ?? '')
-    ];
+$type = (($_POST['type'] ?? 'classic') === 'dedication') ? 'dedication' : 'classic';
+
+$newData = [
+    "enabled"  => isset($_POST['enabled']),
+    "type"     => $type,
+    "name"     => $type === 'classic' ? trim($_POST['name'] ?? '') : '',
+    "from"     => $type === 'dedication' ? trim($_POST['from'] ?? '') : '',
+    "to"       => $type === 'dedication' ? trim($_POST['to'] ?? '') : '',
+    "message"  => trim($_POST['message'] ?? ''),
+    "duration" => max(0, (int)($_POST['duration'] ?? 10)),
+    "video"    => trim($_POST['video'] ?? ''),
+    "audio"    => trim($_POST['audio'] ?? '')
+];
 
     if (writeSpecialJson($file, $newData)) {
         $current = $newData;
@@ -574,6 +576,10 @@ $audioOptions = [
         width: 100%;
       }
     }
+
+    .is-hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -664,10 +670,10 @@ $audioOptions = [
             <div class="section-title">Conținut</div>
 
             <div class="field-row">
-              <div class="field">
-                <label>Nume principal (pentru modul clasic)</label>
-                <input type="text" name="name" value="<?= h($current['name'] ?? '') ?>" placeholder="Andrei">
-              </div>
+            <div class="field" id="classicNameField">
+              <label>Nume principal (pentru modul clasic)</label>
+              <input type="text" name="name" value="<?= h($current['name'] ?? '') ?>" placeholder="Andrei">
+            </div>
 
               <div class="field">
                 <label>Durată (secunde)</label>
@@ -675,7 +681,7 @@ $audioOptions = [
               </div>
             </div>
 
-            <div class="field-row">
+            <div class="field-row" id="dedicationFields">
               <div class="field">
                 <label>De la</label>
                 <input type="text" name="from" value="<?= h($current['from'] ?? '') ?>" placeholder="Andrei">
@@ -735,6 +741,28 @@ $audioOptions = [
     </div>
   </div>
 <?php endif; ?>
+<script>
+  function updateEditorMode() {
+    const selectedType = document.querySelector('input[name="type"]:checked')?.value || 'classic';
+    const classicField = document.getElementById('classicNameField');
+    const dedicationFields = document.getElementById('dedicationFields');
 
+    if (!classicField || !dedicationFields) return;
+
+    if (selectedType === 'dedication') {
+      classicField.classList.add('is-hidden');
+      dedicationFields.classList.remove('is-hidden');
+    } else {
+      classicField.classList.remove('is-hidden');
+      dedicationFields.classList.add('is-hidden');
+    }
+  }
+
+  document.querySelectorAll('input[name="type"]').forEach(input => {
+    input.addEventListener('change', updateEditorMode);
+  });
+
+  updateEditorMode();
+</script>
 </body>
 </html>
