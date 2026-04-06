@@ -1218,6 +1218,115 @@
         transform: translateY(0);
       }
     }
+
+    .tagline {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tagline.quote-style::before,
+    .tagline.quote-style::after {
+      position: absolute;
+      font-family: 'Amarante', serif;
+      color: rgba(249,242,223,0.42);
+      text-shadow: 0 0 14px rgba(70,33,33,0.18);
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .tagline.quote-style::before {
+      content: "“";
+      top: -0.35em;
+      left: -0.55em;
+      font-size: 0.9em;
+    }
+
+    .tagline.quote-style::after {
+      content: "”";
+      bottom: -0.42em;
+      right: -0.48em;
+      font-size: 0.9em;
+    }
+
+    .tagline.quote-style.shimmering::before,
+    .tagline.quote-style.shimmering::after {
+      animation: taglineQuoteGlow 2.2s ease-in-out infinite;
+    }
+
+    @keyframes taglineQuoteGlow {
+      0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.9;
+        transform: scale(1.06);
+      }
+    }
+
+    .tagline.shimmering {
+      overflow: hidden;
+    }
+
+    .tagline.shimmering::selection {
+      background: rgba(249,242,223,0.18);
+    }
+
+    .tagline-shimmer {
+      position: absolute;
+      top: -18%;
+      left: -32%;
+      width: 20%;
+      height: 150%;
+      transform: skewX(-20deg);
+      background: linear-gradient(
+        90deg,
+        rgba(249,242,223,0) 0%,
+        rgba(249,242,223,0.04) 35%,
+        rgba(249,242,223,0.26) 50%,
+        rgba(249,242,223,0.04) 65%,
+        rgba(249,242,223,0) 100%
+      );
+      filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .tagline.shimmering .tagline-shimmer {
+      animation: taglineShimmerSweep 2.8s ease-in-out 1 forwards;
+    }
+
+    @keyframes taglineShimmerSweep {
+      0% {
+        left: -32%;
+        opacity: 0;
+      }
+      12% {
+        opacity: 1;
+      }
+      100% {
+        left: 118%;
+        opacity: 0;
+      }
+    }
+
+    .tagline .tagline-letter {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .tagline.reveal .tagline-letter {
+      animation: taglineLetterReveal 0.45s ease forwards;
+    }
+
+    @keyframes taglineLetterReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1855,14 +1964,14 @@
 
       const taglineEl = document.getElementById("tagline");
 
-      const taglineDefault = "Coffee & Stories";
+      const taglineDefault = "Coffee and Stories";
 
       const taglineMessages = [
-        "&bdquo;Take your coffee break.&rdquo;",
-        "&bdquo;Slow moments matter.&rdquo;",
-        "&bdquo;Pause. Sip. Enjoy.&rdquo;",
-        "&bdquo;Warm coffee. Good stories.&rdquo;",
-        "&bdquo;Stay awhile.&rdquo;"
+        "Take your coffee break.",
+        "Slow moments matter.",
+        "Pause. Sip. Enjoy.",
+        "Warm coffee. Good stories.",
+        "Stay awhile."
       ];
 
       let lastTaglineIndex = -1;
@@ -1886,7 +1995,7 @@
         taglineEl.classList.add("hidden");
 
         setTimeout(() => {
-          setTaglineWithLetterReveal(text);
+          setTaglineWithLetterReveal(text, true);
           taglineEl.classList.remove("hidden");
           taglineEl.classList.add("show");
         }, 400);
@@ -1895,7 +2004,7 @@
           taglineEl.classList.add("hidden");
 
           setTimeout(() => {
-            setTaglineWithLetterReveal(taglineDefault);
+            setTaglineWithLetterReveal(taglineDefault, false);
             taglineEl.classList.remove("hidden");
             taglineEl.classList.add("show");
           }, 400);
@@ -1915,23 +2024,32 @@
         }, 90000);
       }
 
-      function setTaglineWithLetterReveal(text) {
-        if (!taglineEl) return;
+    function setTaglineWithLetterReveal(text, useQuotes = false) {
+      if (!taglineEl) return;
 
-        taglineEl.classList.remove("reveal");
-        taglineEl.innerHTML = "";
+      taglineEl.classList.remove("reveal", "shimmering", "quote-style");
+      taglineEl.innerHTML = "";
 
-        [...text].forEach((char, index) => {
-          const span = document.createElement("span");
-          span.className = "tagline-letter";
-          span.textContent = char === " " ? "\u00A0" : char;
-          span.style.animationDelay = `${index * 0.04}s`;
-          taglineEl.appendChild(span);
-        });
-
-        void taglineEl.offsetWidth;
-        taglineEl.classList.add("reveal");
+      if (useQuotes) {
+        taglineEl.classList.add("quote-style");
       }
+
+      [...text].forEach((char, index) => {
+        const span = document.createElement("span");
+        span.className = "tagline-letter";
+        span.textContent = char === " " ? "\u00A0" : char;
+        span.style.animationDelay = `${index * 0.04}s`;
+        taglineEl.appendChild(span);
+      });
+
+      const shimmer = document.createElement("span");
+      shimmer.className = "tagline-shimmer";
+      taglineEl.appendChild(shimmer);
+
+      void taglineEl.offsetWidth;
+
+      taglineEl.classList.add("reveal", "shimmering");
+    }
 
     function startBurnInProtection() {
       const positions = [
@@ -2190,9 +2308,8 @@
     checkSpecialOverlay();
     setInterval(checkSpecialOverlay, 3000);
 
-    startTaglineRotation();
     setTimeout(() => {
-      setTaglineWithLetterReveal(taglineDefault);
+      setTaglineWithLetterReveal(taglineDefault, false);
     }, 500);
 
     //teste
