@@ -1109,72 +1109,104 @@
       linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.62));
   }
 
-    .special-inner {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      max-width: 1100px;
-      transform: translateY(18px) scale(0.98);
-      transition: transform 0.7s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
 
-    .special-overlay.show .special-inner {
-      transform: translateY(0) scale(1);
-    }
+.special-inner {
+  position: relative;
+  z-index: 2;
+  width: min(1100px, 92vw);
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  transform: translateY(18px) scale(0.98);
+  transition: transform 0.7s ease;
+}
 
-    .special-kicker {
-      font-family: 'Inter', sans-serif;
-      font-size: clamp(14px, 1.4vw, 22px);
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(249,242,223,0.72);
-      text-shadow: 0 4px 14px rgba(0,0,0,0.24);
-      margin-bottom: 4px;
-    }
+.special-name {
+  display: block;
+  font-family: 'Amarante', serif;
+  font-size: clamp(78px, 11vw, 210px);
+  line-height: 0.9;
+  color: var(--white);
+  text-shadow:
+    0 8px 30px rgba(0,0,0,0.30),
+    0 0 28px rgba(249,242,223,0.10),
+    0 0 48px rgba(70,33,33,0.24);
+  margin: 0;
+  animation: specialFloat 4s ease-in-out infinite;
+}
 
-    .special-name {
-      font-family: 'Amarante', serif;
-      font-size: clamp(72px, 11vw, 200px);
-      line-height: 0.92;
-      color: var(--white);
-      text-shadow:
-        0 8px 30px rgba(0,0,0,0.30),
-        0 0 28px rgba(249,242,223,0.10),
-        0 0 48px rgba(70,33,33,0.24);
-      margin-bottom: 6px;
-      animation: specialFloat 4s ease-in-out infinite;
-    }
+.special-message {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(18px, 1.8vw, 26px);
+  line-height: 1.55;
+  color: rgba(249,242,223,0.90);
+  text-shadow: 0 4px 18px rgba(0,0,0,0.24);
+  max-width: 760px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
 
-    .special-message {
-      font-family: 'Inter', sans-serif;
-      font-size: clamp(18px, 1.9vw, 28px);
-      line-height: 1.5;
-      color: rgba(249,242,223,0.90);
-      text-shadow: 0 4px 18px rgba(0,0,0,0.24);
-      max-width: 820px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-    }
+.special-meta {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 0;
+}
 
-    @media (max-width: 900px) {
-      .special-kicker {
-        font-size: clamp(12px, 3vw, 16px);
-        letter-spacing: 0.16em;
-      }
+.special-meta-card {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 24px;
+  border-radius: 24px;
+  background: rgba(8,8,8,0.22);
+  border: 1px solid rgba(249,242,223,0.10);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 50px rgba(0,0,0,0.22);
+}
 
-      .special-name {
-        font-size: clamp(54px, 16vw, 120px);
-      }
+.special-meta-line {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(15px, 1.4vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(249,242,223,0.82);
+  text-shadow: 0 4px 14px rgba(0,0,0,0.24);
+}
 
-      .special-message {
-        font-size: clamp(15px, 4.6vw, 22px);
-      }
-    }
+@media (max-width: 900px) {
+  .special-inner {
+    width: min(94vw, 94vw);
+    gap: 14px;
+  }
+
+  .special-meta-card {
+    width: 100%;
+    max-width: 92vw;
+    padding: 14px 16px;
+    border-radius: 18px;
+  }
+
+  .special-meta-line {
+    font-size: clamp(13px, 3.8vw, 17px);
+    letter-spacing: 0.06em;
+  }
+
+  .special-name {
+    font-size: clamp(54px, 16vw, 120px);
+  }
+
+  .special-message {
+    font-size: clamp(15px, 4.6vw, 22px);
+    max-width: 92vw;
+  }
+}
     
 
 
@@ -1882,21 +1914,21 @@
 
       const specialType = data.type || "classic";
 
-      if (specialType === "dedication") {
-        specialMeta.style.display = "flex";
-        specialFrom.textContent = data.from ? `De la, ${data.from}` : "De la";
-        specialTo.textContent = data.to ? `Pentru, ${data.to}` : "Pentru";
-        specialName.style.display = "none";
-        specialName.textContent = "";
-      } else {
-        specialMeta.style.display = "none";
-        specialFrom.textContent = "";
-        specialTo.textContent = "";
-        specialName.style.display = "block";
-        specialName.textContent = data.name || "";
-      }
+if (specialType === "dedication") {
+  specialMeta.style.display = "flex";
+  specialFrom.textContent = `De la, ${data.from || ""}`;
+  specialTo.textContent = `Pentru, ${data.to || ""}`;
+  specialName.style.display = "none";
+  specialName.textContent = "";
+} else {
+  specialMeta.style.display = "none";
+  specialFrom.textContent = "";
+  specialTo.textContent = "";
+  specialName.style.display = "block";
+  specialName.textContent = data.name || "";
+}
 
-      specialMessage.textContent = data.message || "";
+specialMessage.textContent = data.message || "";
 
       specialAudioMode = true;
 
@@ -1989,45 +2021,62 @@
       }
 
       async function checkSpecialOverlay() {
-        try {
-          const response = await fetch("special.json?ts=" + Date.now(), {
-            cache: "no-store"
-          });
+  try {
+    const response = await fetch("special.json?ts=" + Date.now(), {
+      cache: "no-store"
+    });
 
-          if (!response.ok) return;
+    if (!response.ok) return;
 
-          const data = await response.json();
+    const data = await response.json();
 
-          const signature = JSON.stringify({
-            enabled: !!data.enabled,
-            type: data.type || "classic",
-            name: data.name || "",
-            from: data.from || "",
-            to: data.to || "",
-            message: data.message || "",
-            duration: data.duration || 0,
-            video: data.video || "",
-            audio: data.audio || ""
-          });
+    const signature = JSON.stringify({
+      enabled: !!data.enabled,
+      type: data.type || "classic",
+      name: data.name || "",
+      from: data.from || "",
+      to: data.to || "",
+      message: data.message || "",
+      duration: data.duration || 0,
+      video: data.video || "",
+      audio: data.audio || ""
+    });
 
-          if (data.enabled && data.name && data.message) {
-            if (!specialModeActive && lastSpecialSignature !== signature) {
-              lastSpecialSignature = signature;
-              showSpecialOverlay(data);
-            } else if (specialModeActive) {
-              specialName.textContent = data.name || "";
-              specialMessage.textContent = data.message || "";
-            }
-          } else {
-            if (specialModeActive) {
-              hideSpecialOverlay();
-            }
-            lastSpecialSignature = "";
-          }
-        } catch (error) {
-          console.log("special.json indisponibil:", error);
+    const specialType = data.type || "classic";
+    const hasClassicContent = specialType === "classic" && data.name && data.message;
+    const hasDedicationContent = specialType === "dedication" && data.from && data.to && data.message;
+
+    if (data.enabled && (hasClassicContent || hasDedicationContent)) {
+      if (!specialModeActive && lastSpecialSignature !== signature) {
+        lastSpecialSignature = signature;
+        showSpecialOverlay(data);
+      } else if (specialModeActive) {
+        if (specialType === "dedication") {
+          specialMeta.style.display = "flex";
+          specialFrom.textContent = `De la, ${data.from || ""}`;
+          specialTo.textContent = `Pentru, ${data.to || ""}`;
+          specialName.style.display = "none";
+          specialName.textContent = "";
+        } else {
+          specialMeta.style.display = "none";
+          specialFrom.textContent = "";
+          specialTo.textContent = "";
+          specialName.style.display = "block";
+          specialName.textContent = data.name || "";
         }
+
+        specialMessage.textContent = data.message || "";
       }
+    } else {
+      if (specialModeActive) {
+        hideSpecialOverlay();
+      }
+      lastSpecialSignature = "";
+    }
+  } catch (error) {
+    console.log("special.json indisponibil:", error);
+  }
+}
 
       async function loadAdsFromJson() {
       try {
