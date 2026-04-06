@@ -1201,6 +1201,23 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    .tagline .tagline-letter {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .tagline.reveal .tagline-letter {
+      animation: taglineLetterReveal 0.45s ease forwards;
+    }
+
+    @keyframes taglineLetterReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1841,11 +1858,11 @@
       const taglineDefault = "Coffee & Stories";
 
       const taglineMessages = [
-        "Take your coffee break",
-        "Slow moments matter",
-        "Pause. Sip. Enjoy.",
-        "Warm coffee. Good stories.",
-        "Stay awhile"
+        "&bdquo;Take your coffee break.&rdquo;",
+        "&bdquo;Slow moments matter.&rdquo;",
+        "&bdquo;Pause. Sip. Enjoy.&rdquo;",
+        "&bdquo;Warm coffee. Good stories.&rdquo;",
+        "&bdquo;Stay awhile.&rdquo;"
       ];
 
       let lastTaglineIndex = -1;
@@ -1864,27 +1881,26 @@
       function showTemporaryTagline(text) {
         if (specialModeActive) return;
         if (adOverlay && adOverlay.classList.contains("show")) return;
-        
         if (!taglineEl) return;
 
         taglineEl.classList.add("hidden");
 
         setTimeout(() => {
-          taglineEl.textContent = text;
+          setTaglineWithLetterReveal(text);
           taglineEl.classList.remove("hidden");
           taglineEl.classList.add("show");
         }, 400);
-
 
         setTimeout(() => {
           taglineEl.classList.add("hidden");
 
           setTimeout(() => {
-            taglineEl.textContent = taglineDefault;
+            setTaglineWithLetterReveal(taglineDefault);
             taglineEl.classList.remove("hidden");
+            taglineEl.classList.add("show");
           }, 400);
 
-        }, 8000); 
+        }, 8000);
       }
 
       function startTaglineRotation() {
@@ -1896,7 +1912,25 @@
           const randomText = getRandomTagline();
           showTemporaryTagline(randomText);
 
-        }, 180000);
+        }, 90000);
+      }
+
+      function setTaglineWithLetterReveal(text) {
+        if (!taglineEl) return;
+
+        taglineEl.classList.remove("reveal");
+        taglineEl.innerHTML = "";
+
+        [...text].forEach((char, index) => {
+          const span = document.createElement("span");
+          span.className = "tagline-letter";
+          span.textContent = char === " " ? "\u00A0" : char;
+          span.style.animationDelay = `${index * 0.04}s`;
+          taglineEl.appendChild(span);
+        });
+
+        void taglineEl.offsetWidth;
+        taglineEl.classList.add("reveal");
       }
 
     function startBurnInProtection() {
@@ -2157,7 +2191,9 @@
     setInterval(checkSpecialOverlay, 3000);
 
     startTaglineRotation();
-
+    setTimeout(() => {
+      setTaglineWithLetterReveal(taglineDefault);
+    }, 500);
 
     //teste
     // setTimeout(showAdsOverlay, 3000);
